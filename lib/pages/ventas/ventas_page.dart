@@ -520,7 +520,6 @@ class _VentasPageState extends State<VentasPage> {
     showDialog(
       context: context,
       builder: (context) {
-        // Pedimos el focus después de que el frame se haya construido
         WidgetsBinding.instance.addPostFrameCallback((_) {
           numeroFocus.requestFocus();
         });
@@ -541,30 +540,32 @@ class _VentasPageState extends State<VentasPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 16),
 
-                // Campo Número
+                // Número
                 CustomInput(
                   controller: numeroController,
                   label: 'Número',
                   keyboardType: TextInputType.number,
-                  focusNode: numeroFocus, // ✅ usamos el focus node local
+                  focusNode: numeroFocus,
                   textInputAction: TextInputAction.next,
-                  enabled: false, // ❌ deshabilitado
+                  enabled: false,
                   onSubmitted: (_) => montoFocus.requestFocus(),
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(6),
                   ],
                 ),
+
                 const SizedBox(height: 12),
 
-                // Campo Monto
+                // Monto
                 CustomInput(
                   controller: montoController,
                   label: 'Monto',
                   keyboardType: TextInputType.number,
-                  focusNode: montoFocus, // ✅ focus del monto
+                  focusNode: montoFocus,
                   textInputAction: TextInputAction.done,
                   onSubmitted: (_) => _updateDetalle(
                     detalle,
@@ -576,48 +577,53 @@ class _VentasPageState extends State<VentasPage> {
                     LengthLimitingTextInputFormatter(6),
                   ],
                 ),
+
                 const SizedBox(height: 20),
 
-                // Botones: Actualizar → Eliminar → Cancelar
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Guar.',
-                        icon: Icons.save,
-                        color: AppColors.primary,
-                        onPressed: () => _updateDetalle(
-                          detalle,
-                          numeroController,
-                          montoController,
-                        ),
-                      ),
+                // 🔥 BOTÓN GUARDAR
+                SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    text: 'Guardar',
+                    icon: Icons.save,
+                    color: AppColors.primary,
+                    onPressed: () => _updateDetalle(
+                      detalle,
+                      numeroController,
+                      montoController,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Elim.',
-                        icon: Icons.delete,
-                        color: Colors.red,
-                        onPressed: () {
-                          setState(() {
-                            _venta!.detalles!.remove(detalle);
-                          });
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: CustomButton(
-                        text: 'Can.',
-                        icon: Icons.cancel,
-                        color: Colors.grey,
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
-                  ],
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // 🔥 BOTÓN ELIMINAR
+                SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    text: 'Eliminar',
+                    icon: Icons.delete,
+                    color: Colors.red,
+                    onPressed: () {
+                      setState(() {
+                        _venta!.detalles!.remove(detalle);
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // 🔥 BOTÓN CANCELAR
+                SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    text: 'Cancelar',
+                    icon: Icons.cancel,
+                    color: Colors.grey,
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ),
               ],
             ),

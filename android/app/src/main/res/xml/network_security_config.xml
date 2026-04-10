@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">lotery.el-solitions.es</domain>
+        <trust-anchors>
+            <!-- CA de confianza, o tu certificado auto firmado -->
+            <certificates src="system"/>
+            <!-- Para pruebas: también puedes usar `src="user"` si importas certificado en el móvil -->
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

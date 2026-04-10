@@ -1,0 +1,43 @@
+name: loterymobile
+description: Aplicación Flutter de lotería
+publish_to: 'none' # Evita subirlo por error a pub.dev
+
+# Versión de la app: 1.0.0 y build 1
+version: 1.0.0+1
+
+# Versión de Dart compatible
+environment:
+    sdk: ^3.11.1
+
+# 🔹 DEPENDENCIAS PRINCIPALES (lo que usa tu app)
+dependencies:
+    flutter:
+        sdk: flutter
+
+    intl: ^0.18.1 # Manejo de fechas
+    http: ^1.2.0 # Peticiones HTTP (API)
+    shared_preferences: ^2.2.2 # Guardar datos en el dispositivo
+    cupertino_icons: ^1.0.8 # Iconos estilo iOS
+    local_auth: ^2.2.1 #biometrico
+    flutter_secure_storage: ^8.0.0 #cifrado
+# 🔹 DEPENDENCIAS DE DESARROLLO (no van en producción)
+dev_dependencies:
+    flutter_test:
+        sdk: flutter
+
+    flutter_lints: ^6.0.0 # Reglas de buenas prácticas
+    flutter_launcher_icons: ^0.13.1 # Generador de iconos de la app
+
+# 🔹 CONFIGURACIÓN DEL ICONO DE LA APP
+flutter_launcher_icons:
+    android: true # Generar icono para Android
+    ios: true # Generar icono para iOS
+    image_path: 'assets/icon.png' # Ruta del icono principal (1024x1024 recomendado)
+
+# 🔹 CONFIGURACIÓN GENERAL DE FLUTTER
+flutter:
+    uses-material-design: true # Habilita Material Design
+
+    # 🔹 ARCHIVOS QUE USA LA APP (assets)
+    assets:
+        - assets/images/logo.png # Tu logo interno (NO es el icono de la app)

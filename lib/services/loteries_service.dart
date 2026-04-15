@@ -30,7 +30,7 @@ class LoteriesService {
       );
 
       //// print('🔹 Status code: ${response.statusCode}');
-      //// print('🔹 Response body: ${response.body}');
+      // print('🔹 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

@@ -6,12 +6,14 @@ class Loteria {
   final String shortName;
   final String nombre;
   final String? imageBase64;
+  final String? imageUrl;
   final bool? disponible;
 
   Loteria({
     required this.id,
     required this.shortName,
     required this.nombre,
+    this.imageUrl,
     this.imageBase64,
     this.disponible,
   });
@@ -22,6 +24,7 @@ class Loteria {
       shortName: json['short_name'],
       nombre: json['nombre'],
       imageBase64: json['image_base64'],
+      imageUrl: json['image_url'],
       disponible: json['disponible'],
     );
   }

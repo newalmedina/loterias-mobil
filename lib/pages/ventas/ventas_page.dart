@@ -22,6 +22,7 @@ class VentasPage extends StatefulWidget {
 
 class _VentasPageState extends State<VentasPage> {
   List<Loteria> _loteries = [];
+  List<String> _errores = [];
   Set<VentaDetalle> _seleccionados = {};
   Map<int, bool> _quinielasSelected = {};
   final Map<int, bool> _supPaleSelected =
@@ -255,7 +256,53 @@ class _VentasPageState extends State<VentasPage> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // Row botones
+          if (_errores.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(top: 10, right: 8, left: 8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                border: Border.all(color: Colors.red),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red),
+                  const SizedBox(width: 10),
+
+                  /// 👇 MENSAJES
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _errores
+                          .map(
+                            (e) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                '• $e',
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+
+                  /// 👇 BOTÓN CERRAR
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.red),
+                    onPressed: () {
+                      setState(() {
+                        _errores.clear(); // elimina todos los errores
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -473,30 +520,23 @@ class _VentasPageState extends State<VentasPage> {
           if (_venta != null && _venta!.detalles!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: _openFinalizarModal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.check, color: Colors.white),
-                    SizedBox(width: 8),
-                    Text(
-                      'Finalizar Jugada',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  InkWell(
+                    onTap: _openFinalizarModal, // o tu función de impresión
+                    borderRadius: BorderRadius.circular(50),
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
                       ),
+                      child: const Icon(Icons.print, color: Colors.white),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
         ],
@@ -1132,20 +1172,41 @@ class _VentasPageState extends State<VentasPage> {
   }
 
   void _finalizarJugada(String action) async {
-    print('Acción: $action');
-    SnackbarHelper.show(
-      context,
-      message: "Venta realizada correctamente",
-      backgroundColor: AppColors.success,
-    );
+    _errores = [];
+    final response = await VentasService.finalizarVenta(_venta!);
 
-    // final success = await VentasService.finalizarVenta(_venta);
+    print('SUCCESS: ${response.success}');
+    print('MESSAGE: ${response.message}');
+    print('ERRORS: ${response.errors}');
 
-    // if (success) {
-    //   print('Venta finalizada correctamente');
-    // } else {
-    //   print('Error al finalizar la venta');
-    // }
+    if (response.success) {
+      setState(() {
+        _venta = null;
+        _seleccionados.clear();
+        _errores = []; // limpiar errores
+      });
+
+      SnackbarHelper.show(
+        context,
+        message: response.message.isNotEmpty
+            ? response.message
+            : "Venta realizada correctamente",
+        backgroundColor: AppColors.success,
+      );
+
+      print('Venta finalizada correctamente');
+    } else {
+      setState(() {
+        _errores = response.errors.isNotEmpty
+            ? response.errors.map((e) => e.toString()).toList()
+            : [response.message];
+      });
+      SnackbarHelper.show(
+        context,
+        message: "Se encontraron errores",
+        backgroundColor: AppColors.danger,
+      );
+    }
   }
 
   void _editarSeleccionados() {

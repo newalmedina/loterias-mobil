@@ -38,7 +38,7 @@ class LoteriaResult {
       numbers: json['numbers'] != null
           ? List<String>.from(json['numbers'])
           : null,
-      image: json['image'],
+      image: json['image_base64'],
       // completeName se construye automáticamente
     );
   }

@@ -11,7 +11,7 @@ class SnackbarHelper {
     BuildContext context, {
     required String message,
     Color backgroundColor = const Color.fromARGB(255, 178, 3, 253),
-    Duration duration = const Duration(seconds: 3),
+    Duration duration = const Duration(seconds: 2),
   }) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

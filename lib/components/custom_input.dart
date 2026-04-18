@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 🔹 Necesario para inputFormatters
-import '../theme/theme.dart'; // Tus colores personalizados
+import 'package:flutter/services.dart';
+import '../theme/theme.dart';
 
 class CustomInput extends StatefulWidget {
   final TextEditingController controller;
@@ -8,15 +8,12 @@ class CustomInput extends StatefulWidget {
   final bool isPassword;
   final TextInputType keyboardType;
   final bool canVisible;
-  final bool hasError; // si true, borde rojo
-  final IconData? prefixIcon; // opcional
+  final bool hasError;
+  final IconData? prefixIcon;
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
   final Function(String)? onSubmitted;
-  final List<TextInputFormatter>?
-  inputFormatters; // Para limitar caracteres y dígitos
-
-  // 🔹 Nueva propiedad para habilitar/deshabilitar
+  final List<TextInputFormatter>? inputFormatters;
   final bool enabled;
 
   const CustomInput({
@@ -32,7 +29,7 @@ class CustomInput extends StatefulWidget {
     this.textInputAction,
     this.onSubmitted,
     this.inputFormatters,
-    this.enabled = true, // 🔹 por defecto true
+    this.enabled = true,
   });
 
   @override
@@ -48,8 +45,15 @@ class _CustomInputState extends State<CustomInput> {
     _obscureText = widget.isPassword;
   }
 
+  void _clearText() {
+    widget.controller.clear();
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasText = widget.controller.text.isNotEmpty;
+
     return TextField(
       controller: widget.controller,
       obscureText: widget.isPassword ? _obscureText : false,
@@ -58,11 +62,15 @@ class _CustomInputState extends State<CustomInput> {
       textInputAction: widget.textInputAction,
       onSubmitted: widget.onSubmitted,
       inputFormatters: widget.inputFormatters,
-      enabled: widget.enabled, // 🔹 aplicamos el enabled
+      enabled: widget.enabled,
+      onChanged: (_) => setState(() {}),
+
       decoration: InputDecoration(
         labelText: widget.label,
         labelStyle: const TextStyle(color: AppColors.primary),
+
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -70,6 +78,7 @@ class _CustomInputState extends State<CustomInput> {
             width: 2,
           ),
         ),
+
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -77,13 +86,30 @@ class _CustomInputState extends State<CustomInput> {
             width: 2,
           ),
         ),
+
         prefixIcon: widget.isPassword
             ? const Icon(Icons.lock)
             : (widget.prefixIcon != null
                   ? Icon(widget.prefixIcon, color: AppColors.primary)
                   : null),
-        suffixIcon: widget.isPassword && widget.canVisible
-            ? IconButton(
+
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 🗑️ PAPELERA LIMPIAR
+            if (hasText)
+              IconButton(
+                tooltip: 'Limpiar',
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.primary,
+                ),
+                onPressed: _clearText,
+              ),
+
+            // 👁 PASSWORD VISIBILITY
+            if (widget.isPassword && widget.canVisible)
+              IconButton(
                 icon: Icon(
                   _obscureText ? Icons.visibility_off : Icons.visibility,
                 ),
@@ -92,8 +118,9 @@ class _CustomInputState extends State<CustomInput> {
                     _obscureText = !_obscureText;
                   });
                 },
-              )
-            : null,
+              ),
+          ],
+        ),
       ),
     );
   }

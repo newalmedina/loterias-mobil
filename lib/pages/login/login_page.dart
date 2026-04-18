@@ -19,9 +19,11 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _userController = TextEditingController(
     text: '23479', // Valor por defecto
+    // text: '', // Valor por defecto
   );
   final TextEditingController _passwordController = TextEditingController(
     text: 'EithanSteven15*', // Valor por defecto
+    // text: '', // Valor por defecto
   );
 
   bool _rememberUser = false;

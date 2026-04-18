@@ -55,6 +55,8 @@ class _VentasPageState extends State<VentasPage> {
   }
 
   void _openLoteriaModal() {
+    String search = '';
+
     showDialog(
       context: context,
       builder: (context) => CustomModal(
@@ -62,42 +64,64 @@ class _VentasPageState extends State<VentasPage> {
         child: StatefulBuilder(
           builder: (context, setModalState) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: _loteries.isNotEmpty
-                ? [
-                    for (var lot in _loteries)
-                      CheckboxListTile(
-                        activeColor: AppColors
-                            .secondary, // color del check al seleccionar
-                        checkColor: AppColors.primary, // color de la marca ✓
-                        contentPadding: EdgeInsets.zero, // ajusta margen
+            children: [
+              // 🔍 SEARCH
+              TextField(
+                decoration: const InputDecoration(
+                  hintText: 'Buscar lotería...',
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onChanged: (value) {
+                  setModalState(() {
+                    search = value.toLowerCase();
+                  });
+                },
+              ),
+
+              const SizedBox(height: 10),
+
+              // 📋 LISTA
+              if (_loteries.isNotEmpty)
+                ..._loteries
+                    .where((lot) {
+                      final name = lot.nombre.toLowerCase();
+                      final short = lot.shortName.toLowerCase();
+                      return name.contains(search) || short.contains(search);
+                    })
+                    .map((lot) {
+                      return CheckboxListTile(
+                        activeColor: AppColors.secondary,
+                        checkColor: AppColors.primary,
+                        contentPadding: EdgeInsets.zero,
                         title: Text('${lot.nombre} (${lot.shortName})'),
                         value: _quinielasSelected[lot.id] ?? false,
                         onChanged: (val) {
                           setModalState(() {
                             _quinielasSelected[lot.id] = val ?? false;
                           });
-                          setState(() {}); // actualizar label al instante
+                          setState(() {});
                         },
-                      ),
-                  ]
-                : [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'No hay loterías disponibles',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
+                      );
+                    })
+                    .toList()
+              else
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'No hay loterías disponibles',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
                     ),
-                  ],
+                  ),
+                ),
+            ],
           ),
         ),
       ),
     );
-    // 👇 AQUÍ se recupera el foco después de cerrar el modal
-    // _recoverFocus();
+
+    // 👇 recuperar foco después de cerrar modal
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _recoverFocus();
     });
@@ -256,181 +280,203 @@ class _VentasPageState extends State<VentasPage> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          if (_errores.isNotEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(top: 10, right: 8, left: 8),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                border: Border.all(color: Colors.red),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red),
-                  const SizedBox(width: 10),
+          ExpansionTile(
+            initiallyExpanded: true,
+            leading: const Icon(Icons.tune),
+            title: const Text('Jugadas'),
+            children: [
+              if (_errores.isNotEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(top: 10, right: 8, left: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    border: Border.all(color: Colors.red),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red),
+                      const SizedBox(width: 10),
 
-                  /// 👇 MENSAJES
+                      /// 👇 MENSAJES
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _errores
+                              .map(
+                                (e) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    '• $e',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+
+                      /// 👇 BOTÓN CERRAR
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            _errores.clear(); // elimina todos los errores
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _errores
-                          .map(
-                            (e) => Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Text(
-                                '• $e',
-                                style: const TextStyle(color: Colors.red),
-                              ),
-                            ),
-                          )
-                          .toList(),
+                    child: CustomButton(
+                      text: 'Qui.',
+                      color: AppColors.primary,
+                      onPressed: _openLoteriaModal,
                     ),
                   ),
-
-                  /// 👇 BOTÓN CERRAR
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red),
-                    onPressed: () {
-                      setState(() {
-                        _errores.clear(); // elimina todos los errores
-                      });
-                    },
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: CustomButton(
+                      text: 'S. Pal',
+                      color: AppColors.secondary,
+                      onPressed: _openSuperPaleModal,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: CustomButton(
+                      text: 'Comb.',
+                      color: AppColors.tertiary,
+                      onPressed: _combJugadsModal,
+                    ),
                   ),
                 ],
               ),
-            ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  text: 'Qui.',
-                  color: AppColors.primary,
-                  onPressed: _openLoteriaModal,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: CustomButton(
-                  text: 'S. Pal',
-                  color: AppColors.secondary,
-                  onPressed: _openPModal,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: CustomButton(
-                  text: 'Comb. Jugadas',
-                  color: AppColors.tertiary,
-                  onPressed: _combJugadsModal,
-                ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-          // Loterías seleccionadas
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              selectedLoterias.isNotEmpty
-                  ? 'Seleccionadas: $selectedLoterias'
-                  : 'No hay loterías seleccionadas',
-              style: const TextStyle(fontSize: 14, color: AppColors.quaternary),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Inputs
-          Row(
-            children: [
-              Expanded(
-                flex: 9,
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 6,
-                      child: CustomInput(
-                        controller: _numberController,
-                        label: 'Número',
-                        keyboardType: TextInputType.number,
-                        focusNode: _numberFocus,
-                        textInputAction: TextInputAction.next,
-                        onSubmitted: (_) {
-                          _amountFocus.requestFocus();
-                        },
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(6),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 3,
-                      child: CustomInput(
-                        controller: _amountController,
-                        label: 'Monto',
-                        keyboardType: TextInputType.number,
-                        focusNode: _amountFocus,
-                        textInputAction: TextInputAction.done,
-                        onSubmitted: (_) {
-                          _addLotery();
-                        },
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(6),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // Checkbox
-              SizedBox(
-                width: 40,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: CustomCheckbox(
-                    value: _keepAmount,
-                    onChanged: (val) {
-                      setState(() {
-                        _keepAmount = val ?? false;
-                      });
-                    },
-                    size: 30,
-                    borderColor: AppColors.primary,
-                    activeColor: AppColors.secondary,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              // Botón +
-              SizedBox(
-                width: 50,
-                height: 50,
-                child: Center(
-                  child: CustomButton(
-                    text: '+',
+              // Loterías seleccionadas
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  selectedLoterias.isNotEmpty
+                      ? 'Seleccionadas: $selectedLoterias'
+                      : 'No hay loterías seleccionadas',
+                  style: const TextStyle(
+                    fontSize: 14,
                     color: AppColors.quaternary,
-                    isCircular: true,
-                    onPressed: _addLotery,
                   ),
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              // Inputs
+              Row(
+                children: [
+                  Expanded(
+                    flex: 10,
+                    child: Row(
+                      children: [
+                        // Número (50%)
+                        Expanded(
+                          child: CustomInput(
+                            controller: _numberController,
+                            label: 'Número',
+                            keyboardType: TextInputType.number,
+                            focusNode: _numberFocus,
+                            textInputAction: _amountController.text.isEmpty
+                                ? TextInputAction.next
+                                : TextInputAction.done,
+                            // textInputAction: TextInputAction.next,
+                            onSubmitted: (_) {
+                              if (_amountController.text.isEmpty) {
+                                _amountFocus.requestFocus();
+                              } else {
+                                _addLotery();
+                                _recoverFocus();
+                              }
+                              // _amountFocus.requestFocus();
+                            },
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(6),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        // Monto (50%)
+                        Expanded(
+                          child: CustomInput(
+                            controller: _amountController,
+                            label: 'Monto',
+                            keyboardType: TextInputType.number,
+                            focusNode: _amountFocus,
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) {
+                              _addLotery();
+                            },
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(6),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Checkbox pequeño
+                  SizedBox(
+                    width: 30,
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: CustomCheckbox(
+                        value: _keepAmount,
+                        onChanged: (val) {
+                          setState(() {
+                            _keepAmount = val ?? false;
+                          });
+                        },
+                        size: 22,
+                        borderColor: AppColors.primary,
+                        activeColor: AppColors.secondary,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Botón + comentado
+                  /*
+    SizedBox(
+      width: 50,
+      height: 50,
+      child: Center(
+        child: CustomButton(
+          text: '+',
+          color: AppColors.quaternary,
+          isCircular: true,
+          onPressed: _addLotery,
+        ),
+      ),
+    ),
+    */
+                ],
+              ),
             ],
           ),
-
           const SizedBox(height: 16),
 
           // Total
@@ -517,28 +563,39 @@ class _VentasPageState extends State<VentasPage> {
           ),
 
           // FOOTER
-          if (_venta != null && _venta!.detalles!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // IZQUIERDA: botón + (depende de inputs)
+                CustomButton(
+                  text: '+',
+                  color: AppColors.quaternary,
+                  isCircular: true,
+                  onPressed: _addLotery,
+                ),
+                const SizedBox(width: 56), // mantiene alineación
+                // DERECHA: imprimir (depende de venta)
+                if (_venta != null && _venta!.detalles!.isNotEmpty)
                   InkWell(
-                    onTap: _openFinalizarModal, // o tu función de impresión
+                    onTap: _openFinalizarModal,
                     borderRadius: BorderRadius.circular(50),
                     child: Container(
                       width: 56,
                       height: 56,
                       decoration: const BoxDecoration(
-                        color: Colors.green,
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.print, color: Colors.white),
                     ),
-                  ),
-                ],
-              ),
+                  )
+                else
+                  const SizedBox(width: 56), // mantiene layout estable
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -673,56 +730,94 @@ class _VentasPageState extends State<VentasPage> {
     );
   }
 
-  void _openPModal() {
+  void _openSuperPaleModal() {
+    String search = '';
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (_) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Selecciona las loterías S. Pal',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-
-                  // Verificamos si hay loterías
-                  if (_loteries.isNotEmpty)
-                    ..._loteries.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      Loteria lottery = entry.value;
-                      return CheckboxListTile(
-                        title: Text(
-                          lottery.shortName,
-                        ), // ajusta según tu modelo
-                        value: _supPaleSelected[index] ?? false,
-                        onChanged: (value) {
-                          setModalState(() {
-                            _supPaleSelected[index] = value ?? false;
-                          });
-                        },
-                      );
-                    })
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'No hay loterías disponibles',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic,
-                        ),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.55,
+                child: Column(
+                  children: [
+                    const Text(
+                      'Selecciona las loterías S. Pal',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
 
-                  SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                  Center(
-                    child: ElevatedButton(
+                    TextField(
+                      decoration: const InputDecoration(
+                        hintText: 'Buscar lotería...',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        setModalState(() {
+                          search = value.toLowerCase();
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // 🔥 LISTA CON SCROLL (FIX REAL)
+                    Expanded(
+                      child: _loteries.isNotEmpty
+                          ? ListView(
+                              children: _loteries
+                                  .asMap()
+                                  .entries
+                                  .where((entry) {
+                                    final lottery = entry.value;
+                                    final name = lottery.nombre.toLowerCase();
+                                    final short = lottery.shortName
+                                        .toLowerCase();
+                                    return name.contains(search) ||
+                                        short.contains(search);
+                                  })
+                                  .map((entry) {
+                                    int index = entry.key;
+                                    Loteria lottery = entry.value;
+
+                                    return CheckboxListTile(
+                                      activeColor: AppColors.secondary,
+                                      checkColor: AppColors.primary,
+                                      contentPadding: EdgeInsets.zero,
+                                      title: Text(lottery.shortName),
+                                      value: _supPaleSelected[index] ?? false,
+                                      onChanged: (value) {
+                                        setModalState(() {
+                                          _supPaleSelected[index] =
+                                              value ?? false;
+                                        });
+                                      },
+                                    );
+                                  })
+                                  .toList(),
+                            )
+                          : const Center(
+                              child: Text(
+                                'No hay loterías disponibles',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    ElevatedButton(
                       onPressed:
                           _supPaleSelected.values.where((v) => v).length == 2
                           ? () {
@@ -731,8 +826,8 @@ class _VentasPageState extends State<VentasPage> {
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green, // ✅ fondo verde
-                        padding: EdgeInsets.symmetric(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 32,
                           vertical: 12,
                         ),
@@ -740,17 +835,17 @@ class _VentasPageState extends State<VentasPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         'Añadir',
                         style: TextStyle(
-                          color: Colors.white, // ✅ texto blanco
+                          color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -988,6 +1083,7 @@ class _VentasPageState extends State<VentasPage> {
       context,
       message: message,
       backgroundColor: AppColors.danger,
+      duration: const Duration(seconds: 2),
     );
   }
 
@@ -1216,13 +1312,13 @@ class _VentasPageState extends State<VentasPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: Text("Editar monto"),
-        content: TextField(
+        content: CustomInput(
           controller: controller,
+          label: "Nuevo monto",
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: "Nuevo monto"),
           inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly, // solo números (0-9)
-            LengthLimitingTextInputFormatter(6), // máximo 6 dígitos
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(6),
           ],
         ),
         actions: [

@@ -92,43 +92,75 @@ class _ResultadosPageState extends State<ResultadosPage> {
   }
 
   void _openFilterModal() {
+    String search = '';
+
     showDialog(
       context: context,
       builder: (context) => CustomModal(
-        title: 'Filtros',
+        title: 'Loterias',
         child: StatefulBuilder(
           builder: (context, setModalState) => Column(
             children: [
-              // 🔹 Botón Seleccionar todo
+              const SizedBox(height: 8),
+
+              // 🔍 BUSCADOR
+              TextField(
+                decoration: const InputDecoration(
+                  hintText: 'Buscar lotería...',
+                  prefixIcon: Icon(Icons.search),
+                ),
+                onChanged: (value) {
+                  setModalState(() {
+                    search = value.toLowerCase();
+                  });
+                },
+              ),
+
+              // 🔹 BOTÓN SELECCIONAR TODO (AHORA DEBAJO DEL BUSCADOR)
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
-                    final allSelected = _filters.values.every((v) => v);
+                    final filtered = _loteries.where((lot) {
+                      final name = lot.nombre.toLowerCase();
+                      final short = lot.shortName.toLowerCase();
+                      return name.contains(search) || short.contains(search);
+                    }).toList();
+
+                    final allSelected = filtered.every(
+                      (lot) => _filters[lot.id] == true,
+                    );
+
                     setModalState(() {
-                      _filters.updateAll((key, value) => !allSelected);
+                      for (var lot in filtered) {
+                        _filters[lot.id] = !allSelected;
+                      }
                     });
+
                     setState(() {});
                   },
                   child: const Text('Seleccionar todo'),
                 ),
               ),
+
               const SizedBox(height: 8),
 
-              // Lista de loterías
-              for (var lot in _loteries)
+              // 📋 LISTA FILTRADA
+              for (var lot in _loteries.where((lot) {
+                final name = lot.nombre.toLowerCase();
+                final short = lot.shortName.toLowerCase();
+                return name.contains(search) || short.contains(search);
+              }))
                 CheckboxListTile(
-                  activeColor:
-                      AppColors.secondary, // color del check al seleccionar
-                  checkColor: AppColors
-                      .primary, // color del check al seleccionar la marca ✓
-                  title: Text(' ${lot.nombre} (${lot.shortName} )'),
+                  activeColor: AppColors.secondary,
+                  checkColor: AppColors.primary,
+                  title: Text('${lot.nombre} (${lot.shortName})'),
                   value: _filters[lot.id] ?? false,
                   onChanged: (val) {
                     setModalState(() {
                       _filters[lot.id] = val ?? false;
                     });
-                    setState(() {}); // actualizar selección al instante
+                    setState(() {});
                   },
                 ),
             ],
@@ -219,7 +251,7 @@ class _ResultadosPageState extends State<ResultadosPage> {
           children: [
             Expanded(
               child: CustomButton(
-                text: 'Filtros',
+                text: 'Loterias',
                 icon: Icons.filter_alt,
                 color: AppColors.tertiary,
                 onPressed: _openFilterModal,

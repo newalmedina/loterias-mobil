@@ -152,6 +152,7 @@ class _VentasFiltrosState extends State<VentasFiltros> {
             // ================= BOTONES =================
             Row(
               children: [
+                // 🔹 MÁS FILTROS
                 if (widget.moduleName == 'ventas_realizadas')
                   Expanded(
                     child: CustomButton(
@@ -161,7 +162,47 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                       onPressed: _openMoreFilters,
                     ),
                   ),
+                // Text(
+                //   'Módulo: ${widget.moduleName ?? "sin módulo"}',
+                //   style: const TextStyle(
+                //     fontSize: 14,
+                //     fontWeight: FontWeight.bold,
+                //   ),
+                // ),
+                if (widget.moduleName == 'tickets_premiados') ...[
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButton<int?>(
+                        value: _pagadas,
+                        isExpanded: true,
+                        underline: const SizedBox(),
+                        icon: const Icon(Icons.arrow_drop_down),
+                        items: const [
+                          DropdownMenuItem(
+                            value: null,
+                            child: Text('Premiados/No premiados'),
+                          ),
+                          DropdownMenuItem(value: 1, child: Text('Pagados')),
+                          DropdownMenuItem(value: 0, child: Text('No pagados')),
+                        ],
+                        onChanged: (v) {
+                          setState(() => _pagadas = v);
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+
                 const SizedBox(width: 10),
+
+                // 🔍 BUSCAR
                 Expanded(
                   child: CustomButton(
                     text: 'Buscar',

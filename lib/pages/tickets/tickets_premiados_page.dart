@@ -89,8 +89,11 @@ class _TicketsPremiadosPageState extends State<TicketsPremiadosPage> {
           ),
           const SizedBox(height: 10),
 
-          VentasFiltros(onSearch: _searchTickets),
-
+          // VentasFiltros(onSearch: _searchTickets),
+          VentasFiltros(
+            moduleName: 'tickets_premiados',
+            onSearch: _searchTickets,
+          ),
           const SizedBox(height: 10),
 
           Expanded(

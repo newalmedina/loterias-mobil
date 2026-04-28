@@ -55,10 +55,10 @@ class VentasService {
       }
 
       // 🔴 ERROR BACKEND
-      print('❌ ERROR BACKEND');
-      print('Status: ${response.statusCode}');
-      print('Message: ${data['message']}');
-      print('List: ${data['messageList']}');
+      //print('❌ ERROR BACKEND');
+      //print('Status: ${response.statusCode}');
+      //print('Message: ${data['message']}');
+      //print('List: ${data['messageList']}');
 
       return ApiResponse(
         success: false,
@@ -67,7 +67,7 @@ class VentasService {
         statusCode: response.statusCode,
       );
     } catch (e) {
-      print('❌ EXCEPTION: $e');
+      //print('❌ EXCEPTION: $e');
 
       return ApiResponse(
         success: false,
@@ -75,6 +75,52 @@ class VentasService {
         errors: [e.toString()],
         statusCode: null,
       );
+    }
+  }
+
+  static Future<Map<String, dynamic>?> findVenta(int id) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'access_token') ?? '';
+
+      final uri = Uri.parse(ApiConfig.baseUrl + ApiConfig.findVentas + '/$id');
+
+      //print("━━━━━━━━━━━━━━━━━━━━━━");
+      //print("📤 FIND VENTA REQUEST");
+      //print("🆔 ID: $id");
+      //print("🔗 URL:");
+      //print(uri.toString());
+      //print("━━━━━━━━━━━━━━━━━━━━━━");
+
+      final response = await http.get(
+        uri,
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          if (token.isNotEmpty) "Authorization": "Bearer $token",
+        },
+      );
+
+      //print("📡 STATUS: ${response.statusCode}");
+      //print("📥 RESPONSE:");
+      //print(response.body);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // ⚠️ importante: esperamos UN objeto
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
+
+        return null;
+      }
+
+      return null;
+    } catch (e) {
+      //print("❌ ERROR findVenta:");
+      //print(e);
+      return null;
     }
   }
 
@@ -86,16 +132,31 @@ class VentasService {
     List<String>? type,
     int? pagado,
     int? premiado,
+    bool onlyTrash = false,
   }) async {
+    print("━━━━━━━━━━━━━━━━━━━━━━");
+    print("📤 GET VENTAS REQUEST");
+
+    print("📅 startDate: $startDate");
+    print("📅 endDate: $endDate");
+    print("🔤 code: $code");
+    print("💰 pagado: $pagado");
+    print("🏆 premiado: $premiado");
+    print("🏷️ type: $type");
+    print("🎯 loterias: $loteriaIds");
+    print("🎯 onlyTrash: $onlyTrash");
+
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'access_token') ?? '';
 
-      final Map<String, String> queryParams = {};
+      final Map<String, dynamic> queryParams = {};
 
       // =========================
-      // 📅 FECHAS (OPCIONALES)
+      // FECHAS
       // =========================
+      queryParams['onlyTrash'] = onlyTrash ? '1' : '0';
+
       if (startDate != null) {
         queryParams['fecha_inicio'] = startDate.toIso8601String().split('T')[0];
       }
@@ -105,12 +166,13 @@ class VentasService {
       }
 
       // =========================
-      // 🔤 CAMPOS SIMPLES
+      // CAMPOS SIMPLES
       // =========================
       if (code != null && code.isNotEmpty) {
         queryParams['code'] = code;
       }
 
+      // ✔️ IMPORTANTE: SOLO SI NO ES NULL
       if (pagado != null) {
         queryParams['pagado'] = pagado.toString();
       }
@@ -120,44 +182,29 @@ class VentasService {
       }
 
       // =========================
-      // 🧩 CONSTRUIR URI (POSTMAN STYLE)
+      // LISTAS (FIX CRÍTICO)
       // =========================
-      final uri = Uri.parse(ApiConfig.baseUrl + ApiConfig.getVentas).replace(
-        queryParameters: {
-          ...queryParams,
+      if (type != null && type.isNotEmpty) {
+        queryParams['type[]'] = type.join(',');
+      }
 
-          // type[] = A&type[] = B
-          if (type != null && type.isNotEmpty)
-            for (int i = 0; i < type.length; i++) "type[]": type[i],
+      if (loteriaIds != null && loteriaIds.isNotEmpty) {
+        queryParams['loteriaIds[]'] = loteriaIds
+            .map((e) => e.toString())
+            .join(',');
+      }
 
-          // loteriaIds[] = 1&loteriaIds[] = 2
-          if (loteriaIds != null && loteriaIds.isNotEmpty)
-            for (int i = 0; i < loteriaIds.length; i++)
-              "loteriaIds[]": loteriaIds[i].toString(),
-        },
-      );
-
-      // =========================
-      // 🔥 DEBUG COMPLETO
-      // =========================
-      // print("━━━━━━━━━━━━━━━━━━━━━━");
-      // print("📤 getVentas REQUEST");
-
-      // print("📅 startDate: $startDate");
-      // print("📅 endDate: $endDate");
-      // print("🔤 code: $code");
-      // print("💰 pagado: $pagado");
-      // print("🏆 premiado: $premiado");
-      // print("🧩 type: $type");
-      // print("🎯 loteriaIds: $loteriaIds");
-
-      // print("🔗 FINAL URL:");
-      // print(uri.toString());
-      // print("━━━━━━━━━━━━━━━━━━━━━━");
+      final uri = Uri.parse(
+        ApiConfig.baseUrl + ApiConfig.getVentas,
+      ).replace(queryParameters: queryParams);
 
       // =========================
-      // 🌐 REQUEST
+      // DEBUG FINAL
       // =========================
+      print("🔗 URL FINAL:");
+      print(uri.toString());
+      print("━━━━━━━━━━━━━━━━━━━━━━");
+
       final response = await http.get(
         uri,
         headers: {
@@ -167,18 +214,109 @@ class VentasService {
         },
       );
 
-      // print("📡 STATUS: ${response.statusCode}");
-      // print("📨 RESPONSE: ${response.body}");
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data is List) return data;
+
+        if (data is List) {
+          return data;
+        }
       }
 
       return [];
     } catch (e) {
-      // print("❌ ERROR: $e");
+      print("❌ EXCEPTION:");
+      print(e);
       return [];
+    }
+  }
+
+  static Future<ApiResponse> anularVenta(int id) async {
+    try {
+      final storage = const FlutterSecureStorage();
+      final token = await storage.read(key: 'access_token') ?? '';
+
+      final url = Uri.parse("${ApiConfig.baseUrl}${ApiConfig.anularVenta}/$id");
+
+      final response = await http.delete(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          if (token.isNotEmpty) "Authorization": "Bearer $token",
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      // 🟢 SUCCESS
+      if (data['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: data['message'] ?? 'Venta anulada correctamente',
+          errors: [],
+          statusCode: response.statusCode,
+        );
+      }
+
+      // 🔴 ERROR BACKEND
+      return ApiResponse(
+        success: false,
+        message: data['message'] ?? 'Error al anular la venta',
+        errors: data['messageList'] ?? [],
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'Error de conexión',
+        errors: [e.toString()],
+        statusCode: null,
+      );
+    }
+  }
+
+  static Future<ApiResponse> pagarVenta(int id) async {
+    try {
+      final storage = const FlutterSecureStorage();
+      final token = await storage.read(key: 'access_token') ?? '';
+
+      final url = Uri.parse("${ApiConfig.baseUrl}${ApiConfig.pagarVenta}/$id");
+
+      final response = await http.patch(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          if (token.isNotEmpty) "Authorization": "Bearer $token",
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      // 🟢 SUCCESS
+      if (data['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: data['message'] ?? 'Venta pagada correctamente',
+          errors: [],
+          statusCode: response.statusCode,
+        );
+      }
+
+      // 🔴 ERROR BACKEND
+      return ApiResponse(
+        success: false,
+        message: data['message'] ?? 'Error al pagar la venta',
+        errors: data['messageList'] ?? [],
+        statusCode: response.statusCode,
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'Error de conexión',
+        errors: [e.toString()],
+        statusCode: null,
+      );
     }
   }
 }

@@ -9,7 +9,10 @@ class ApiConfig {
   static const String validateToken = "/validate-token";
 
   static const String finalizarVenta = "/ventas/finalizar";
+  static const String anularVenta = "/ventas/delete";
+  static const String pagarVenta = "/ventas/pagar";
   static const String getVentas = "/ventas/search-venta";
+  static const String findVentas = "/ventas/find";
   static const String getResults = "/loteries/get-results";
   static const String getloteries = "/loteries/get-loteries";
   static const String getloteriesDisponibles =

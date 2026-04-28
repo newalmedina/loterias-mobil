@@ -61,8 +61,7 @@ class _BasePageState extends State<BasePage> {
         return const TicketsPremiadosPage();
       case 'tickets_anulados':
         return const TicketsAnuladosPage();
-      case 'sorteos':
-        return const SorteosPage();
+
       case 'config_impresora':
         return const ConfigImpresoraPage();
       case 'configuracion':
@@ -165,7 +164,6 @@ class _BasePageState extends State<BasePage> {
                 'tickets_premiados',
               ),
               _item(Icons.cancel, "Tickets anulados", 'tickets_anulados'),
-              _item(Icons.casino, "Sorteos realizados", 'sorteos'),
 
               const Divider(color: Colors.white54),
 

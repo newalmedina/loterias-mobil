@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loterymobile/theme/theme.dart';
 
 class ConfigImpresoraPage extends StatelessWidget {
   const ConfigImpresoraPage({super.key});
@@ -6,10 +7,14 @@ class ConfigImpresoraPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: const [
+      children: [
         Text(
           'Configuración de Impresora',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
         ),
         SizedBox(height: 10),
         ListTile(

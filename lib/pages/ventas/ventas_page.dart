@@ -280,6 +280,22 @@ class _VentasPageState extends State<VentasPage> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(Icons.point_of_sale, color: Colors.blue),
+              SizedBox(width: 8),
+              Text(
+                'Ventas',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
           ExpansionTile(
             initiallyExpanded: true,
             leading: const Icon(Icons.tune),
@@ -602,7 +618,7 @@ class _VentasPageState extends State<VentasPage> {
   }
 
   void _openEditDetalleModal(VentaDetalle detalle) {
-    print(detalle.numberFormated);
+    //print(detalle.numberFormated);
     final TextEditingController numeroController = TextEditingController(
       text: detalle.numberFormated,
     );
@@ -1271,9 +1287,9 @@ class _VentasPageState extends State<VentasPage> {
     _errores = [];
     final response = await VentasService.finalizarVenta(_venta!);
 
-    print('SUCCESS: ${response.success}');
-    print('MESSAGE: ${response.message}');
-    print('ERRORS: ${response.errors}');
+    //print('SUCCESS: ${response.success}');
+    //print('MESSAGE: ${response.message}');
+    //print('ERRORS: ${response.errors}');
 
     if (response.success) {
       setState(() {
@@ -1290,13 +1306,14 @@ class _VentasPageState extends State<VentasPage> {
         backgroundColor: AppColors.success,
       );
 
-      print('Venta finalizada correctamente');
+      //print('Venta finalizada correctamente');
     } else {
       setState(() {
         _errores = response.errors.isNotEmpty
             ? response.errors.map((e) => e.toString()).toList()
             : [response.message];
       });
+      //print(_errores);
       SnackbarHelper.show(
         context,
         message: "Se encontraron errores",

@@ -184,19 +184,13 @@ class _ResultadosPageState extends State<ResultadosPage> {
         const SizedBox(height: 8),
         Center(
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
-                Icons.emoji_events,
-                color: AppColors.primary,
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Consultar premios',
-                textAlign: TextAlign.center,
+              Icon(Icons.emoji_events, color: Colors.amber),
+              SizedBox(width: 8),
+              Text(
+                'Consultar Premios',
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
                 ),

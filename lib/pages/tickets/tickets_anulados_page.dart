@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:loterymobile/pages/reportes/reportes_page.dart';
 import 'package:loterymobile/pages/ventas/widgets/listado_detalle.dart';
 import 'package:loterymobile/pages/ventas/widgets/ventas_filtros.dart';
 import 'package:loterymobile/services/ventas_service.dart';
@@ -74,16 +75,37 @@ class _TicketsAnuladosPageState extends State<TicketsAnuladosPage> {
         children: [
           const SizedBox(height: 10),
           Row(
-            children: const [
-              Icon(Icons.cancel, color: Colors.red),
-              SizedBox(width: 8),
-              Text(
-                'Ventas Anuladas',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // ❌ TÍTULO
+              Row(
+                children: const [
+                  Icon(Icons.cancel, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text(
+                    'Ventas Anuladas',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+
+              // 📊 BOTÓN REPORTE
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
+                icon: const Icon(Icons.file_download),
+                label: const Text("Reportes"),
+                onPressed: _openReporteScreen,
               ),
             ],
           ),
@@ -105,6 +127,20 @@ class _TicketsAnuladosPageState extends State<TicketsAnuladosPage> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openReporteScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReportesPage(
+          ventas: _tickets,
+          filtros: _filtrosActuales,
+          title: "Reportes Tickets anulados",
+          moduleName: "tickets_anulados",
+        ),
       ),
     );
   }

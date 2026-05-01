@@ -264,7 +264,7 @@ class _ListadoDetalleState extends State<ListadoDetalle> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        "${d['loterie_nombre']} - ${d['number']} (${d['type']}) | \$${d['monto_jugada']}",
+                                        "${d['loterie_nombre']} - ${d['number_formatted']} (${d['type']}) | \$${d['monto_jugada']}",
                                         style: const TextStyle(fontSize: 12),
                                       ),
                                     ),
@@ -550,7 +550,7 @@ class _ListadoDetalleState extends State<ListadoDetalle> {
                                         children: [
                                           Expanded(
                                             child: Text(
-                                              "${d['loterie_nombre']} - ${d['number']} (${d['type']}) | \$${monto}",
+                                              "${d['loterie_nombre']} - ${d['number_formatted']} (${d['type']}) | \$${monto}",
                                               style: const TextStyle(
                                                 fontSize: 12,
                                               ),

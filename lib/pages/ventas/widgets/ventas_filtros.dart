@@ -6,6 +6,7 @@ import 'package:loterymobile/components/custom_input.dart';
 import 'package:loterymobile/model/loteria_model.dart';
 import 'package:loterymobile/services/loteries_service.dart';
 import 'package:loterymobile/theme/theme.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class VentasFiltros extends StatefulWidget {
   final Function(Map<String, dynamic>) onSearch;
@@ -105,9 +106,44 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                   ),
                 ),
                 const SizedBox(width: 4),
+
                 IconButton(
                   icon: const Icon(Icons.qr_code_scanner),
-                  onPressed: () {},
+                  onPressed: () async {
+                    String? result = await showModalBottomSheet<String>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (context) {
+                        return SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          child: MobileScanner(
+                            fit: BoxFit.cover,
+                            controller: MobileScannerController(
+                              detectionSpeed: DetectionSpeed.noDuplicates,
+                              facing: CameraFacing.back,
+                              torchEnabled: false,
+                            ),
+                            onDetect: (capture) {
+                              final barcodes = capture.barcodes;
+
+                              if (barcodes.isNotEmpty) {
+                                final code = barcodes.first.rawValue;
+
+                                if (code != null) {
+                                  Navigator.pop(context, code);
+                                }
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    );
+
+                    if (result != null) {
+                      debugPrint("QR leído: $result");
+                      // aquí haces lo que quieras con el QR
+                    }
+                  },
                 ),
               ],
             ),

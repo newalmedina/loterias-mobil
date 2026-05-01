@@ -21,6 +21,8 @@ dependencies:
     local_auth: ^2.2.1 #biometrico
     flutter_secure_storage: ^8.0.0 #cifrado
     flutter_svg: ^2.0.10
+    mobile_scanner: ^5.2.3
+    blue_thermal_printer: ^1.2.3
 # 🔹 DEPENDENCIAS DE DESARROLLO (no van en producción)
 dev_dependencies:
     flutter_test:

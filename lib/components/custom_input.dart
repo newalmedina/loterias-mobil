@@ -96,28 +96,36 @@ class _CustomInputState extends State<CustomInput> {
         suffixIcon: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 🗑️ PAPELERA LIMPIAR
+            // 🗑 LIMPIAR (SIN FOCO)
             if (hasText)
-              IconButton(
-                tooltip: 'Limpiar',
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: AppColors.primary,
+              Focus(
+                skipTraversal: true,
+                child: GestureDetector(
+                  onTap: _clearText,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 8),
+                    child: Icon(Icons.delete_outline, color: AppColors.primary),
+                  ),
                 ),
-                onPressed: _clearText,
               ),
 
-            // 👁 PASSWORD VISIBILITY
+            // 👁 VISIBILIDAD PASSWORD
             if (widget.isPassword && widget.canVisible)
-              IconButton(
-                icon: Icon(
-                  _obscureText ? Icons.visibility_off : Icons.visibility,
+              Focus(
+                skipTraversal: true,
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _obscureText = !_obscureText;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                    ),
+                  ),
                 ),
-                onPressed: () {
-                  setState(() {
-                    _obscureText = !_obscureText;
-                  });
-                },
               ),
           ],
         ),

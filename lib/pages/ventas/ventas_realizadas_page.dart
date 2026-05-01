@@ -4,6 +4,7 @@ import 'package:loterymobile/pages/ventas/widgets/listado_detalle.dart';
 import 'package:loterymobile/pages/ventas/widgets/ventas_filtros.dart';
 import 'package:loterymobile/services/ventas_service.dart';
 import 'package:loterymobile/theme/theme.dart';
+import 'package:loterymobile/pages/reportes/reportes_page.dart';
 
 class VentasRealizadasPage extends StatefulWidget {
   const VentasRealizadasPage({super.key});
@@ -73,16 +74,37 @@ class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
         children: [
           const SizedBox(height: 10),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.point_of_sale, color: Colors.green),
-              SizedBox(width: 8),
-              Text(
-                'Ventas Realizadas',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
+              // 🧾 TÍTULO
+              Row(
+                children: const [
+                  Icon(Icons.point_of_sale, color: Colors.green),
+                  SizedBox(width: 8),
+                  Text(
+                    'Ventas Realizadas',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+
+              // 📊 BOTÓN EXTRAER REPORTE
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                 ),
+                icon: const Icon(Icons.file_download),
+                label: const Text("Reportes"),
+                onPressed: _openReporteScreen,
               ),
             ],
           ),
@@ -107,6 +129,16 @@ class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openReporteScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ReportesPage(ventas: _ventas, filtros: _filtrosActuales),
       ),
     );
   }

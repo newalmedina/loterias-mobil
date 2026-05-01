@@ -247,6 +247,14 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                     onPressed: _onSearch,
                   ),
                 ),
+                Expanded(
+                  child: CustomButton(
+                    text: 'BuscarUuid',
+                    icon: Icons.search,
+                    color: AppColors.quaternary,
+                    onPressed: _buscarUuid,
+                  ),
+                ),
               ],
             ),
           ],
@@ -518,4 +526,6 @@ class _VentasFiltrosState extends State<VentasFiltros> {
     _fechaFinController.dispose();
     super.dispose();
   }
+
+  void _buscarUuid() {}
 }

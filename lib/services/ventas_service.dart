@@ -124,6 +124,54 @@ class VentasService {
     }
   }
 
+  static Future<Map<String, dynamic>?> findVentaByUiid(String uuid) async {
+    try {
+      const storage = FlutterSecureStorage();
+      final token = await storage.read(key: 'access_token') ?? '';
+
+      final uri = Uri.parse(
+        ApiConfig.baseUrl + ApiConfig.findVentaByUuid + '/$uuid',
+      );
+
+      //print("━━━━━━━━━━━━━━━━━━━━━━");
+      //print("📤 FIND VENTA REQUEST");
+      //print("🆔 ID: $id");
+      //print("🔗 URL:");
+      //print(uri.toString());
+      //print("━━━━━━━━━━━━━━━━━━━━━━");
+
+      final response = await http.get(
+        uri,
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          if (token.isNotEmpty) "Authorization": "Bearer $token",
+        },
+      );
+
+      //print("📡 STATUS: ${response.statusCode}");
+      //print("📥 RESPONSE:");
+      //print(response.body);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        // ⚠️ importante: esperamos UN objeto
+        if (data is Map<String, dynamic>) {
+          return data;
+        }
+
+        return null;
+      }
+
+      return null;
+    } catch (e) {
+      //print("❌ ERROR findVenta:");
+      //print(e);
+      return null;
+    }
+  }
+
   static Future<List<dynamic>> getVentas({
     DateTime? startDate,
     DateTime? endDate,

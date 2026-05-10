@@ -1,8 +1,11 @@
 // lib/service/ventas_service.dart
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:loterymobile/model/api_response.dart';
+import 'package:loterymobile/theme/theme.dart';
+import 'package:loterymobile/widgets/snackbar_helper.dart';
 import '../model/venta_model.dart';
 import '../config/api.dart';
 
@@ -124,7 +127,10 @@ class VentasService {
     }
   }
 
-  static Future<Map<String, dynamic>?> findVentaByUiid(String uuid) async {
+  static Future<Map<String, dynamic>?> findVentaByUiid(
+    String uuid,
+    BuildContext context,
+  ) async {
     try {
       const storage = FlutterSecureStorage();
       final token = await storage.read(key: 'access_token') ?? '';
@@ -132,13 +138,6 @@ class VentasService {
       final uri = Uri.parse(
         ApiConfig.baseUrl + ApiConfig.findVentaByUuid + '/$uuid',
       );
-
-      //print("━━━━━━━━━━━━━━━━━━━━━━");
-      //print("📤 FIND VENTA REQUEST");
-      //print("🆔 ID: $id");
-      //print("🔗 URL:");
-      //print(uri.toString());
-      //print("━━━━━━━━━━━━━━━━━━━━━━");
 
       final response = await http.get(
         uri,
@@ -149,25 +148,35 @@ class VentasService {
         },
       );
 
-      //print("📡 STATUS: ${response.statusCode}");
-      //print("📥 RESPONSE:");
-      //print(response.body);
+      final data = json.decode(response.body);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        // ⚠️ importante: esperamos UN objeto
-        if (data is Map<String, dynamic>) {
-          return data;
-        }
-
+      // 🔴 ERROR backend
+      if (data['success'] == false) {
+        SnackbarHelper.show(
+          context,
+          message: data['message'] ?? 'Error desconocido',
+          backgroundColor: AppColors.danger,
+        );
         return null;
+      }
+
+      // ✅ OK
+      if (data['success'] == true) {
+        // SnackbarHelper.show(
+        //   context,
+        //   message: data['message'] ?? 'Venta encontrada',
+        //   backgroundColor: AppColors.success,
+        // );
+        return data['data'];
       }
 
       return null;
     } catch (e) {
-      //print("❌ ERROR findVenta:");
-      //print(e);
+      SnackbarHelper.show(
+        context,
+        message: "Error de conexión",
+        backgroundColor: AppColors.danger,
+      );
       return null;
     }
   }
@@ -176,6 +185,7 @@ class VentasService {
     DateTime? startDate,
     DateTime? endDate,
     List<int>? loteriaIds,
+    List<int>? users,
     String? code,
     List<String>? type,
     int? pagado,
@@ -241,7 +251,11 @@ class VentasService {
             .map((e) => e.toString())
             .join(',');
       }
+      if (users != null && users.isNotEmpty) {
+        queryParams['users[]'] = users.map((e) => e.toString()).join(',');
+      }
 
+      print(queryParams['users[]']);
       final uri = Uri.parse(
         ApiConfig.baseUrl + ApiConfig.getVentas,
       ).replace(queryParameters: queryParams);

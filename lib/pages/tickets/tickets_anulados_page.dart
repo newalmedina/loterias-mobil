@@ -31,6 +31,7 @@ class _TicketsAnuladosPageState extends State<TicketsAnuladosPage> {
       "types": [],
       "pagadas": null,
       "estadoVenta": null,
+      "users": [1],
     });
   }
 
@@ -50,6 +51,7 @@ class _TicketsAnuladosPageState extends State<TicketsAnuladosPage> {
       pagado: filtros["pagadas"],
       premiado: filtros["estadoVenta"],
       onlyTrash: true,
+      users: filtros["users"],
     );
 
     setState(() {
@@ -111,7 +113,10 @@ class _TicketsAnuladosPageState extends State<TicketsAnuladosPage> {
           ),
           const SizedBox(height: 10),
 
-          VentasFiltros(onSearch: _searchTickets),
+          VentasFiltros(
+            onSearch: _searchTickets,
+            moduleName: 'tickets_anulados',
+          ),
 
           const SizedBox(height: 10),
 

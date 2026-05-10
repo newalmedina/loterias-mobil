@@ -33,9 +33,12 @@ class AuthService {
 
       if (data["code"] == 200) {
         final token = data["access_token"];
+        // print(data);
+        final userId = data["user"]["id"];
 
         // Guardar token
         await _storage.write(key: 'access_token', value: token);
+        await _storage.write(key: 'user_id', value: userId.toString());
 
         // Guardar o borrar usuario/contraseña según rememberUser
         if (rememberUser) {

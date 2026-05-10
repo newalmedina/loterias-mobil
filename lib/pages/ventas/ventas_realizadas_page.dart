@@ -31,6 +31,7 @@ class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
       "types": [],
       "pagadas": null,
       "estadoVenta": null,
+      "users": [1],
     });
   }
 
@@ -49,6 +50,7 @@ class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
       type: (filtros["types"] ?? []).cast<String>(),
       pagado: filtros["pagadas"],
       premiado: filtros["estadoVenta"],
+      users: filtros["users"],
     );
 
     setState(() {

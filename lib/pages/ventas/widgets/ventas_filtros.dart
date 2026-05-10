@@ -5,8 +5,12 @@ import 'package:loterymobile/components/custom_date_input.dart';
 import 'package:loterymobile/components/custom_input.dart';
 import 'package:loterymobile/model/loteria_model.dart';
 import 'package:loterymobile/services/loteries_service.dart';
+import 'package:loterymobile/services/user_service.dart';
 import 'package:loterymobile/theme/theme.dart';
+import 'package:loterymobile/widgets/snackbar_helper.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:loterymobile/services/ventas_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class VentasFiltros extends StatefulWidget {
   final Function(Map<String, dynamic>) onSearch;
@@ -19,6 +23,7 @@ class VentasFiltros extends StatefulWidget {
 }
 
 class _VentasFiltrosState extends State<VentasFiltros> {
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   // =========================
   // CONTROLLERS
   // =========================
@@ -41,8 +46,11 @@ class _VentasFiltrosState extends State<VentasFiltros> {
 
   List<Loteria> _loterias = [];
   Map<int, bool> _loteriaFilters = {};
-
   bool _loadingLoterias = false;
+
+  List<User> _users = [];
+  List<int> _usersSelected = [];
+  bool _loadingUsers = false;
 
   // =========================
   // INIT
@@ -56,8 +64,26 @@ class _VentasFiltrosState extends State<VentasFiltros> {
 
     _fechaInicioController.text = formatted;
     _fechaFinController.text = formatted;
-
+    _loadInitialData();
     _loadLoterias();
+    _loadUsers();
+  }
+
+  Future<void> _loadInitialData() async {
+    await _loadLoterias();
+    await _loadUsers();
+
+    // 🔥 leer user_id guardado
+    final userId = await _storage.read(key: 'user_id');
+
+    if (userId != null) {
+      setState(() {
+        _usersSelected = [int.parse(userId)];
+      });
+    }
+
+    // 🔥 buscar automáticamente
+    _onSearch();
   }
 
   Future<void> _loadLoterias() async {
@@ -69,6 +95,17 @@ class _VentasFiltrosState extends State<VentasFiltros> {
       _loterias = data;
       _loteriaFilters = {for (var l in data) l.id: false};
       _loadingLoterias = false;
+    });
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() => _loadingUsers = true);
+
+    final data = await UserService.getUsersCanShow();
+
+    setState(() {
+      _users = data;
+      _loadingUsers = false;
     });
   }
 
@@ -189,15 +226,15 @@ class _VentasFiltrosState extends State<VentasFiltros> {
             Row(
               children: [
                 // 🔹 MÁS FILTROS
-                if (widget.moduleName == 'ventas_realizadas')
-                  Expanded(
-                    child: CustomButton(
-                      text: 'Más filtros',
-                      icon: Icons.filter_alt,
-                      color: AppColors.tertiary,
-                      onPressed: _openMoreFilters,
-                    ),
+                Expanded(
+                  child: CustomButton(
+                    text: 'Más filtros',
+                    icon: Icons.filter_alt,
+                    color: AppColors.tertiary,
+                    onPressed: _openMoreFilters,
                   ),
+                ),
+
                 // Text(
                 //   'Módulo: ${widget.moduleName ?? "sin módulo"}',
                 //   style: const TextStyle(
@@ -205,37 +242,6 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                 //     fontWeight: FontWeight.bold,
                 //   ),
                 // ),
-                if (widget.moduleName == 'tickets_premiados') ...[
-                  const SizedBox(width: 10),
-
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButton<int?>(
-                        value: _pagadas,
-                        isExpanded: true,
-                        underline: const SizedBox(),
-                        icon: const Icon(Icons.arrow_drop_down),
-                        items: const [
-                          DropdownMenuItem(
-                            value: null,
-                            child: Text('Premiados/No premiados'),
-                          ),
-                          DropdownMenuItem(value: 1, child: Text('Pagados')),
-                          DropdownMenuItem(value: 0, child: Text('No pagados')),
-                        ],
-                        onChanged: (v) {
-                          setState(() => _pagadas = v);
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-
                 const SizedBox(width: 10),
 
                 // 🔍 BUSCAR
@@ -247,12 +253,25 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                     onPressed: _onSearch,
                   ),
                 ),
+                // 🧹 LIMPIAR FILTROS
+                Expanded(
+                  child: CustomButton(
+                    text: 'Limpiar',
+                    icon: Icons.cleaning_services,
+                    color: Colors.orange,
+                    onPressed: () {
+                      _clearAllFilters();
+                      _onSearch(); // 🔥 refresca automáticamente
+                    },
+                  ),
+                ),
                 Expanded(
                   child: CustomButton(
                     text: 'BuscarUuid',
                     icon: Icons.search,
                     color: AppColors.quaternary,
-                    onPressed: _buscarUuid,
+                    onPressed: () =>
+                        _buscarUuid("106d0823-61e9-4d06-a85a-347253ef280d"),
                   ),
                 ),
               ],
@@ -291,6 +310,19 @@ class _VentasFiltrosState extends State<VentasFiltros> {
   String _buildResumenFiltros() {
     List<String> partes = [];
 
+    if (_usersSelected.isNotEmpty) {
+      final names = _usersSelected.map((id) {
+        final user = _users.firstWhere(
+          (u) => u.id == id,
+          orElse: () => User(id: id, name: "Usuario"),
+        );
+        return user.id_name ?? user.id_name ?? '';
+      }).toList();
+
+      if (_users.length > 1) {
+        partes.add("Usuarios: ${names.join(', ')}");
+      }
+    }
     // ================= FECHAS =================
     if (_fechaInicioController.text.isNotEmpty ||
         _fechaFinController.text.isNotEmpty) {
@@ -357,6 +389,7 @@ class _VentasFiltrosState extends State<VentasFiltros> {
           .where((e) => e.value)
           .map((e) => e.key)
           .toList(),
+      "users": _usersSelected,
     };
 
     //print("📦 FILTROS: $filters");
@@ -392,118 +425,183 @@ class _VentasFiltrosState extends State<VentasFiltros> {
 
                       const SizedBox(height: 12),
 
-                      TextField(
-                        decoration: const InputDecoration(
-                          hintText: 'Buscar lotería...',
-                          prefixIcon: Icon(Icons.search),
-                        ),
-                        onChanged: (value) {
-                          setModalState(() => search = value.toLowerCase());
-                        },
-                      ),
-
+                      // ================= USUARIO =================
+                      // ================= USUARIO =================
                       const SizedBox(height: 12),
 
+                      // ================= BODY SCROLL =================
                       Expanded(
                         child: _loadingLoterias
                             ? const Center(child: CircularProgressIndicator())
-                            : ListView(
-                                children: [
-                                  const Text("Estado de venta"),
-                                  DropdownButton<int?>(
-                                    value: _estadoVenta,
-                                    isExpanded: true,
-                                    items: const [
-                                      DropdownMenuItem(
-                                        value: null,
-                                        child: Text('Todos'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 1,
-                                        child: Text('Premiados'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 0,
-                                        child: Text('No premiados'),
-                                      ),
-                                    ],
-                                    onChanged: (v) {
-                                      setState(() => _estadoVenta = v);
-                                      setModalState(() {});
-                                    },
-                                  ),
+                            : SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // ================= USUARIOS =================
+                                    if (_users.length > 1) ...[
+                                      const Text("Usuarios"),
 
-                                  const SizedBox(height: 10),
+                                      const SizedBox(height: 6),
 
-                                  const Text("Estado de pago"),
-                                  DropdownButton<int?>(
-                                    value: _pagadas,
-                                    isExpanded: true,
-                                    items: const [
-                                      DropdownMenuItem(
-                                        value: null,
-                                        child: Text('Todos'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 1,
-                                        child: Text('Pagados'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 0,
-                                        child: Text('No pagados'),
-                                      ),
-                                    ],
-                                    onChanged: (v) {
-                                      setState(() => _pagadas = v);
-                                      setModalState(() {});
-                                    },
-                                  ),
-
-                                  const SizedBox(height: 10),
-
-                                  const Text("Tipo"),
-                                  ..._typeFilters.keys.map((key) {
-                                    return CheckboxListTile(
-                                      title: Text(key),
-                                      value: _typeFilters[key],
-                                      onChanged: (val) {
-                                        setState(() {
-                                          _typeFilters[key] = val ?? false;
-                                        });
-                                        setModalState(() {});
-                                      },
-                                    );
-                                  }),
-
-                                  const Divider(),
-
-                                  const Text("Loterías"),
-
-                                  ..._loterias
-                                      .where(
-                                        (l) => l.nombre.toLowerCase().contains(
-                                          search,
+                                      Container(
+                                        constraints: const BoxConstraints(
+                                          maxHeight: 250,
                                         ),
-                                      )
-                                      .map((l) {
-                                        return CheckboxListTile(
-                                          title: Text(l.nombre),
-                                          value: _loteriaFilters[l.id] ?? false,
-                                          onChanged: (val) {
-                                            setState(() {
-                                              _loteriaFilters[l.id] =
-                                                  val ?? false;
-                                            });
+                                        child: Scrollbar(
+                                          thumbVisibility: true,
+                                          child: ListView(
+                                            shrinkWrap: true,
+                                            children: _users.map((u) {
+                                              return CheckboxListTile(
+                                                title: Text(
+                                                  "${u.username ?? ''} - ${u.name ?? ''}",
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                value: _usersSelected.contains(
+                                                  u.id,
+                                                ),
+                                                onChanged: (val) {
+                                                  if (u.id == null) return;
+
+                                                  setState(() {
+                                                    if (val == true) {
+                                                      if (!_usersSelected
+                                                          .contains(u.id)) {
+                                                        _usersSelected.add(
+                                                          u.id!,
+                                                        );
+                                                      }
+                                                    } else {
+                                                      _usersSelected.remove(
+                                                        u.id,
+                                                      );
+                                                    }
+                                                  });
+
+                                                  setModalState(() {});
+                                                },
+                                              );
+                                            }).toList(),
+                                          ),
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 10),
+                                    ],
+                                    // ================= ESTADO VENTA =================
+                                    if (widget.moduleName !=
+                                        'tickets_anulados') ...[
+                                      if (widget.moduleName !=
+                                          'tickets_premiados') ...[
+                                        const Text("Estado de venta"),
+
+                                        DropdownButton<int?>(
+                                          value: _estadoVenta,
+                                          isExpanded: true,
+                                          items: const [
+                                            DropdownMenuItem(
+                                              value: null,
+                                              child: Text('Todos'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 1,
+                                              child: Text('Premiados'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 0,
+                                              child: Text('No premiados'),
+                                            ),
+                                          ],
+                                          onChanged: (v) {
+                                            setState(() => _estadoVenta = v);
                                             setModalState(() {});
                                           },
-                                        );
-                                      }),
-                                ],
+                                        ),
+
+                                        const SizedBox(height: 10),
+                                      ],
+
+                                      // ================= ESTADO PAGO =================
+                                      const Text("Estado de pago"),
+
+                                      DropdownButton<int?>(
+                                        value: _pagadas,
+                                        isExpanded: true,
+                                        items: const [
+                                          DropdownMenuItem(
+                                            value: null,
+                                            child: Text('Todos'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: 1,
+                                            child: Text('Pagados'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: 0,
+                                            child: Text('No pagados'),
+                                          ),
+                                        ],
+                                        onChanged: (v) {
+                                          setState(() => _pagadas = v);
+                                          setModalState(() {});
+                                        },
+                                      ),
+
+                                      const SizedBox(height: 10),
+                                    ],
+
+                                    // ================= TIPOS =================
+                                    const Text("Tipo"),
+
+                                    ..._typeFilters.keys.map((key) {
+                                      return CheckboxListTile(
+                                        title: Text(key),
+                                        value: _typeFilters[key],
+                                        onChanged: (val) {
+                                          setState(() {
+                                            _typeFilters[key] = val ?? false;
+                                          });
+                                          setModalState(() {});
+                                        },
+                                      );
+                                    }),
+
+                                    const Divider(),
+
+                                    // ================= LOTERÍAS (comentado) =================
+
+                                    // const Text("Loterías"),
+
+                                    // ..._loterias
+                                    //     .where(
+                                    //       (l) => l.nombre.toLowerCase().contains(
+                                    //         search,
+                                    //       ),
+                                    //     )
+                                    //     .map((l) {
+                                    //       return CheckboxListTile(
+                                    //         title: Text(l.nombre),
+                                    //         value: _loteriaFilters[l.id] ?? false,
+                                    //         onChanged: (val) {
+                                    //           setState(() {
+                                    //             _loteriaFilters[l.id] =
+                                    //                 val ?? false;
+                                    //           });
+                                    //           setModalState(() {});
+                                    //         },
+                                    //       );
+                                    //     }),
+                                  ],
+                                ),
                               ),
                       ),
 
+                      const SizedBox(height: 10),
+
+                      // ================= BOTÓN =================
                       CustomButton(
-                        text: 'Aplicar',
+                        text: 'Cerrar',
                         icon: Icons.check,
                         color: AppColors.primary,
                         onPressed: () => Navigator.pop(context),
@@ -527,5 +625,57 @@ class _VentasFiltrosState extends State<VentasFiltros> {
     super.dispose();
   }
 
-  void _buscarUuid() {}
+  void _clearAllFilters() {
+    setState(() {
+      // ================= CONTROLLERS =================
+      _ticketController.clear();
+      _fechaInicioController.clear();
+      _fechaFinController.clear();
+
+      // ================= ESTADOS =================
+      _estadoVenta = null;
+      _pagadas = null;
+      // ================= USERS =================
+      _usersSelected.clear();
+      // ================= MAPS =================
+      _typeFilters.updateAll((key, value) => false);
+      _loteriaFilters.updateAll((key, value) => false);
+    });
+  }
+
+  Future<void> _buscarUuid(String uuid) async {
+    final cleanUuid = uuid.trim();
+    print("ANTES DEL SERVICE");
+    // ⚠️ validar vacío
+    if (cleanUuid.isEmpty) {
+      SnackbarHelper.show(
+        context,
+        message: "UUID inválido",
+        backgroundColor: AppColors.warning,
+      );
+      return;
+    }
+
+    // 🔄 llamada al service
+    final result = await VentasService.findVentaByUiid(cleanUuid, context);
+
+    // ❌ si hubo error (el service ya muestra snackbar)
+    if (result == null) return;
+
+    // 🔥 EXTRAER CODE COMO TICKET
+    final code = result['code'];
+
+    _clearAllFilters(); // 🔥 LIMPIA TODO
+
+    setState(() {
+      _ticketController.text = code ?? '';
+    });
+
+    SnackbarHelper.show(
+      context,
+      message: "Venta cargada correctamente",
+      backgroundColor: AppColors.success,
+    );
+    _onSearch();
+  }
 }

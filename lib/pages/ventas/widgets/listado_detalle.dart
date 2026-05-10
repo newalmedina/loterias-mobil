@@ -366,6 +366,32 @@ class _ListadoDetalleState extends State<ListadoDetalle> {
 
     return Column(
       children: [
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.receipt_long, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Text(
+                "Total de ventas: ${ventas.length}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 8),
         // ================= TOGGLE =================
         if (ventas.isNotEmpty)
           Padding(

@@ -31,6 +31,7 @@ class _TicketsPremiadosPageState extends State<TicketsPremiadosPage> {
       "types": [],
       "pagadas": null,
       "estadoVenta": null,
+      "users": [1],
     });
   }
 
@@ -49,6 +50,7 @@ class _TicketsPremiadosPageState extends State<TicketsPremiadosPage> {
       type: (filtros["types"] ?? []).cast<String>(),
       pagado: filtros["pagadas"],
       premiado: 1,
+      users: filtros["users"],
       // onlyTrash: true,
     );
 

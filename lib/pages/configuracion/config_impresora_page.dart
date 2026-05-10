@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:loterymobile/components/custom_button.dart';
+import 'package:loterymobile/components/custom_input.dart';
 import 'package:loterymobile/theme/theme.dart';
 import 'package:loterymobile/widgets/snackbar_helper.dart';
 
@@ -203,14 +204,16 @@ class _ConfigImpresoraPageState extends State<ConfigImpresoraPage> {
           const SizedBox(height: 20),
 
           // 📏 papel
-          TextField(
+          CustomInput(
             controller: paperSizeController,
+            label: "Tamaño del papel (mm)",
+            prefixIcon: Icons.straighten,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: "Tamaño del papel (mm)",
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.straighten),
-            ),
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) async {
+              await saveConfig(); // 👈 ejecuta guardado
+              FocusScope.of(context).unfocus(); // cierra teclado
+            },
           ),
 
           const SizedBox(height: 20),

@@ -7,9 +7,11 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <!-- Android 12+ -->
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" /> -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" android:usesPermissionFlags="neverForLocation"/>
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-
+    <!-- Android 12+ BLUETOOTH COMPLETO -->
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <!-- ubicación requerida para scan en algunos casos -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <application

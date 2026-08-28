@@ -5,6 +5,7 @@ class ReportesPage extends StatelessWidget {
   final Map<String, dynamic> filtros;
   final String title;
   final String moduleName;
+
   const ReportesPage({
     super.key,
     required this.ventas,
@@ -17,46 +18,35 @@ class ReportesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final int totalOrdenes = ventas.length;
 
-    final double totalBruto = double.parse(
-      ventas
-          .fold(
-            0.0,
-            (sum, v) =>
-                sum + (((v['total_venta_bruto'] ?? 0) as num).toDouble()),
-          )
-          .toStringAsFixed(2),
+    final double totalBruto = ventas.fold(
+      0.0,
+      (sum, v) => sum + ((v['total_venta_bruto'] ?? 0) as num).toDouble(),
     );
 
-    final double totalNeto = double.parse(
-      ventas
-          .fold(
-            0.0,
-            (sum, v) => sum + (((v['total_neto'] ?? 0) as num).toDouble()),
-          )
-          .toStringAsFixed(2),
+    final double totalNeto = ventas.fold(
+      0.0,
+      (sum, v) => sum + ((v['total_neto'] ?? 0) as num).toDouble(),
     );
 
-    final double totalComision = double.parse(
-      ventas
-          .fold(
-            0.0,
-            (sum, v) => sum + (((v['total_comision'] ?? 0) as num).toDouble()),
-          )
-          .toStringAsFixed(2),
+    final double totalComision = ventas.fold(
+      0.0,
+      (sum, v) => sum + ((v['total_comision'] ?? 0) as num).toDouble(),
     );
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
 
+      // 🧹 BOTÓN SIMPLIFICADO (SIN IMPRESIÓN)
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // imprimir
+          debugPrint("Reporte generado: ${ventas.length} ventas");
         },
-        child: const Icon(Icons.print),
+        child: const Icon(Icons.info),
       ),
 
       body: Column(
         children: [
+          // ================= RESUMEN =================
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -73,7 +63,6 @@ class ReportesPage extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-
                 Text("TOTAL ÓRDENES: $totalOrdenes"),
                 Text("TOTAL BRUTO: $totalBruto"),
                 Text(
@@ -90,6 +79,8 @@ class ReportesPage extends StatelessWidget {
               ],
             ),
           ),
+
+          // ================= LISTA =================
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -99,9 +90,8 @@ class ReportesPage extends StatelessWidget {
                 final List details = v['details'] ?? [];
 
                 final bool premiado = v['premiado'] == true;
-
-                final double totalPremio = (v['total_premiado'] ?? 0)
-                    .toDouble();
+                final double totalPremio =
+                    (v['total_premiado'] ?? 0).toDouble();
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 18),
@@ -133,6 +123,7 @@ class ReportesPage extends StatelessWidget {
                             ),
                           ),
                         ),
+
                       Text(
                         "VENTA: ${v['code']}",
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -144,6 +135,7 @@ class ReportesPage extends StatelessWidget {
 
                       // ================= RESUMEN =================
                       Text("TOTAL BRUTO: ${v['total_venta_bruto']}"),
+
                       if (moduleName != "tickets_anulados")
                         Text(
                           "TOTAL COMISIÓN: ${v['total_comision']}",
@@ -152,6 +144,7 @@ class ReportesPage extends StatelessWidget {
                             color: Colors.green,
                           ),
                         ),
+
                       Text(
                         "TOTAL NETO: ${v['total_neto']}",
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -176,7 +169,9 @@ class ReportesPage extends StatelessWidget {
                             color: Colors.green,
                           ),
                         ),
+
                       if (premiado) const SizedBox(height: 6),
+
                       if (premiado)
                         Text(
                           v['paid_at'] != null ? "PAGADO" : "NO PAGADO",
@@ -187,9 +182,10 @@ class ReportesPage extends StatelessWidget {
                                 : Colors.red,
                           ),
                         ),
+
                       const Divider(),
 
-                      // ================= TABLA HEADER =================
+                      // ================= HEADER TABLA =================
                       const Row(
                         children: [
                           Expanded(
@@ -242,7 +238,6 @@ class ReportesPage extends StatelessWidget {
                             Expanded(
                               flex: 4,
                               child: Text(
-                                // d['loterie_nombre'] ?? '',
                                 d['short_name'] ?? '',
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontSize: 12),

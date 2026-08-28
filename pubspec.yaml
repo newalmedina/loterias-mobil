@@ -1,46 +1,49 @@
 name: loterymobile
 description: Aplicación Flutter de lotería
-publish_to: 'none' # Evita subirlo por error a pub.dev
+publish_to: 'none'
 
-# Versión de la app: 1.0.0 y build 1
 version: 1.0.0+1
 
-# Versión de Dart compatible
 environment:
-    sdk: ^3.11.1
+    sdk: '>=3.0.0 <4.0.0'
 
-# 🔹 DEPENDENCIAS PRINCIPALES (lo que usa tu app)
 dependencies:
     flutter:
         sdk: flutter
 
-    intl: ^0.18.1 # Manejo de fechas
-    http: ^1.2.0 # Peticiones HTTP (API)
-    shared_preferences: ^2.2.2 # Guardar datos en el dispositivo
-    cupertino_icons: ^1.0.8 # Iconos estilo iOS
-    local_auth: ^2.2.1 #biometrico
-    flutter_secure_storage: ^8.0.0 #cifrado
+    flutter_localizations:
+        sdk: flutter
+
+    intl: ^0.20.2
+    http: ^1.2.0
+    shared_preferences: ^2.2.2
+    cupertino_icons: ^1.0.8
+
+    local_auth: ^2.2.1
+    flutter_secure_storage: ^8.0.0
     flutter_svg: ^2.0.10
     mobile_scanner: ^5.2.3
-    blue_thermal_printer: ^1.2.3
-# 🔹 DEPENDENCIAS DE DESARROLLO (no van en producción)
+
+    share_plus: ^10.0.0
+    path_provider: ^2.1.4
+
+    flutter_blue_plus: ^1.35.0
+    esc_pos_utils: ^1.1.0
+
 dev_dependencies:
     flutter_test:
         sdk: flutter
 
-    flutter_lints: ^6.0.0 # Reglas de buenas prácticas
-    flutter_launcher_icons: ^0.13.1 # Generador de iconos de la app
+    flutter_lints: ^4.0.0
+    flutter_launcher_icons: ^0.11.0
 
-# 🔹 CONFIGURACIÓN DEL ICONO DE LA APP
 flutter_launcher_icons:
-    android: true # Generar icono para Android
-    ios: true # Generar icono para iOS
-    image_path: 'assets/icon.png' # Ruta del icono principal (1024x1024 recomendado)
+    android: true
+    ios: true
+    image_path: assets/icon.png
 
-# 🔹 CONFIGURACIÓN GENERAL DE FLUTTER
 flutter:
-    uses-material-design: true # Habilita Material Design
+    uses-material-design: true
 
-    # 🔹 ARCHIVOS QUE USA LA APP (assets)
     assets:
-        - assets/images/logo.png # Tu logo interno (NO es el icono de la app)
+        - assets/images/logo.png

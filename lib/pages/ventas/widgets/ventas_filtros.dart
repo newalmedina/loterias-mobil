@@ -64,9 +64,9 @@ class _VentasFiltrosState extends State<VentasFiltros> {
 
     _fechaInicioController.text = formatted;
     _fechaFinController.text = formatted;
-    _loadInitialData();
-    _loadLoterias();
-    _loadUsers();
+    // _loadInitialData();
+    // _loadLoterias();
+    // _loadUsers();
   }
 
   Future<void> _loadInitialData() async {
@@ -122,13 +122,11 @@ class _VentasFiltrosState extends State<VentasFiltros> {
           initiallyExpanded: true,
           leading: const Icon(Icons.tune),
           title: const Text('Filtros'),
-
           childrenPadding: const EdgeInsets.symmetric(
             horizontal: 8,
             vertical: 8,
           ),
           tilePadding: const EdgeInsets.symmetric(horizontal: 8),
-
           children: [
             // ================= TICKET =================
             Row(
@@ -143,7 +141,6 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                   ),
                 ),
                 const SizedBox(width: 4),
-
                 IconButton(
                   icon: const Icon(Icons.qr_code_scanner),
                   onPressed: () async {
@@ -225,57 +222,95 @@ class _VentasFiltrosState extends State<VentasFiltros> {
             // ================= BOTONES =================
             Row(
               children: [
-                // 🔹 MÁS FILTROS
                 Expanded(
-                  child: CustomButton(
-                    text: 'Más filtros',
-                    icon: Icons.filter_alt,
+                  child: Material(
                     color: AppColors.tertiary,
-                    onPressed: _openMoreFilters,
+                    borderRadius: BorderRadius.circular(10),
+                    child: InkWell(
+                      onTap: _openMoreFilters,
+                      borderRadius: BorderRadius.circular(10),
+                      child: const SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: Icon(
+                            Icons.filter_alt,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-
-                // Text(
-                //   'Módulo: ${widget.moduleName ?? "sin módulo"}',
-                //   style: const TextStyle(
-                //     fontSize: 14,
-                //     fontWeight: FontWeight.bold,
-                //   ),
-                // ),
                 const SizedBox(width: 10),
-
-                // 🔍 BUSCAR
                 Expanded(
-                  child: CustomButton(
-                    text: 'Buscar',
-                    icon: Icons.search,
+                  child: Material(
                     color: AppColors.primary,
-                    onPressed: _onSearch,
+                    borderRadius: BorderRadius.circular(10),
+                    child: InkWell(
+                      onTap: _onSearch,
+                      borderRadius: BorderRadius.circular(10),
+                      child: const SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: Icon(
+                            Icons.search,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                // 🧹 LIMPIAR FILTROS
+                const SizedBox(width: 10),
                 Expanded(
-                  child: CustomButton(
-                    text: 'Limpiar',
-                    icon: Icons.cleaning_services,
+                  child: Material(
                     color: Colors.orange,
-                    onPressed: () {
-                      _clearAllFilters();
-                      _onSearch(); // 🔥 refresca automáticamente
-                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: InkWell(
+                      onTap: () {
+                        _clearAllFilters();
+                        _onSearch();
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: const SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: Icon(
+                            Icons.cleaning_services,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: CustomButton(
-                    text: 'BuscarUuid',
-                    icon: Icons.search,
+                  child: Material(
                     color: AppColors.quaternary,
-                    onPressed: () =>
-                        _buscarUuid("106d0823-61e9-4d06-a85a-347253ef280d"),
+                    borderRadius: BorderRadius.circular(10),
+                    child: InkWell(
+                      onTap: () =>
+                          _buscarUuid("106d0823-61e9-4d06-a85a-347253ef280d"),
+                      borderRadius: BorderRadius.circular(10),
+                      child: const SizedBox(
+                        height: 48,
+                        child: Center(
+                          child: Icon(
+                            Icons.qr_code_scanner,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
-            ),
+            )
           ],
         ),
 
@@ -347,23 +382,19 @@ class _VentasFiltrosState extends State<VentasFiltros> {
     }
 
     // ================= TIPOS (modal checkbox) =================
-    final tiposSeleccionados = _typeFilters.entries
-        .where((e) => e.value)
-        .map((e) => e.key)
-        .toList();
+    final tiposSeleccionados =
+        _typeFilters.entries.where((e) => e.value).map((e) => e.key).toList();
 
     if (tiposSeleccionados.isNotEmpty) {
       partes.add("Tipos: ${tiposSeleccionados.join(', ')}");
     }
 
     // ================= LOTERÍAS (modal checkbox) =================
-    final loteriasSeleccionadas = _loteriaFilters.entries
-        .where((e) => e.value)
-        .map((e) {
-          final loteria = _loterias.firstWhere((l) => l.id == e.key);
-          return loteria.nombre;
-        })
-        .toList();
+    final loteriasSeleccionadas =
+        _loteriaFilters.entries.where((e) => e.value).map((e) {
+      final loteria = _loterias.firstWhere((l) => l.id == e.key);
+      return loteria.nombre;
+    }).toList();
 
     if (loteriasSeleccionadas.isNotEmpty) {
       partes.add("Loterías: ${loteriasSeleccionadas.join(', ')}");
@@ -381,10 +412,8 @@ class _VentasFiltrosState extends State<VentasFiltros> {
       "endDate": _fechaFinController.text,
       "estadoVenta": _estadoVenta,
       "pagadas": _pagadas,
-      "types": _typeFilters.entries
-          .where((e) => e.value)
-          .map((e) => e.key)
-          .toList(),
+      "types":
+          _typeFilters.entries.where((e) => e.value).map((e) => e.key).toList(),
       "loterias": _loteriaFilters.entries
           .where((e) => e.value)
           .map((e) => e.key)
@@ -440,9 +469,7 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                                     // ================= USUARIOS =================
                                     if (_users.length > 1) ...[
                                       const Text("Usuarios"),
-
                                       const SizedBox(height: 6),
-
                                       Container(
                                         constraints: const BoxConstraints(
                                           maxHeight: 250,
@@ -486,7 +513,6 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                                           ),
                                         ),
                                       ),
-
                                       const SizedBox(height: 10),
                                     ],
                                     // ================= ESTADO VENTA =================
@@ -495,7 +521,6 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                                       if (widget.moduleName !=
                                           'tickets_premiados') ...[
                                         const Text("Estado de venta"),
-
                                         DropdownButton<int?>(
                                           value: _estadoVenta,
                                           isExpanded: true,
@@ -518,7 +543,6 @@ class _VentasFiltrosState extends State<VentasFiltros> {
                                             setModalState(() {});
                                           },
                                         ),
-
                                         const SizedBox(height: 10),
                                       ],
 

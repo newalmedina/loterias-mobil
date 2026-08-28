@@ -34,17 +34,21 @@ class _CustomDateInputState extends State<CustomDateInput> {
 
     final picked = await showDatePicker(
       context: context,
+      locale: const Locale('es', 'ES'),
       initialDate: widget.initialDate ?? DateTime.now(),
       firstDate: widget.firstDate ?? DateTime(2000),
       lastDate: widget.lastDate ?? DateTime(2030),
+      helpText: 'Seleccionar fecha',
+      cancelText: 'Cancelar',
+      confirmText: 'Aceptar',
+      fieldHintText: 'dd/mm/aaaa',
+      fieldLabelText: 'Fecha',
     );
 
     if (picked != null) {
-      widget.controller.text = DateFormat('dd-MM-yyyy').format(picked);
+      widget.controller.text = DateFormat('dd-MM-yyyy', 'es_ES').format(picked);
 
-      if (widget.onDateSelected != null) {
-        widget.onDateSelected!(picked);
-      }
+      widget.onDateSelected?.call(picked);
 
       setState(() {});
     }
@@ -72,9 +76,7 @@ class _CustomDateInputState extends State<CustomDateInput> {
       decoration: InputDecoration(
         labelText: widget.label ?? '',
         labelStyle: const TextStyle(color: AppColors.primary),
-
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -82,7 +84,6 @@ class _CustomDateInputState extends State<CustomDateInput> {
             width: 2,
           ),
         ),
-
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
@@ -90,13 +91,11 @@ class _CustomDateInputState extends State<CustomDateInput> {
             width: 2,
           ),
         ),
-
         prefixIcon: IconButton(
           tooltip: 'Seleccionar fecha',
           icon: const Icon(Icons.calendar_today, color: AppColors.primary),
           onPressed: _pickDate,
         ),
-
         suffixIcon: hasValue
             ? IconButton(
                 tooltip: 'Limpiar fecha',

@@ -1,10 +1,17 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
+import 'package:esc_pos_utils/esc_pos_utils.dart';
+
 import 'package:loterymobile/components/custom_button.dart';
 import 'package:loterymobile/components/custom_input.dart';
 import 'package:loterymobile/theme/theme.dart';
 import 'package:loterymobile/widgets/snackbar_helper.dart';
+
+import 'package:loterymobile/pages/tickets/reporte_page.dart';
 
 class ConfigImpresoraPage extends StatefulWidget {
   const ConfigImpresoraPage({super.key});
@@ -14,23 +21,20 @@ class ConfigImpresoraPage extends StatefulWidget {
 }
 
 class _ConfigImpresoraPageState extends State<ConfigImpresoraPage> {
-  final BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
-  final FlutterSecureStorage storage = const FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
+  final ReporteTicketService printerService = ReporteTicketService();
+
+  static const kPrinterKey = 'selected_printer_address';
+  static const kPaperKey = 'paper_size';
 
   List<BluetoothDevice> printers = [];
   BluetoothDevice? selectedPrinter;
 
-  final TextEditingController paperSizeController = TextEditingController(
-    text: "58",
-  );
+  bool scanning = false;
 
-  bool isLoading = true;
-  bool isConnected = false;
+  final paperSizeController = TextEditingController(text: "58");
 
-  static const String kPrinterKey = 'selected_printer';
-  static const String kPaperKey = 'paper_size';
-
-  String? _pendingPrinterAddress;
+  String? savedPrinterAddress;
 
   @override
   void initState() {
@@ -38,89 +42,103 @@ class _ConfigImpresoraPageState extends State<ConfigImpresoraPage> {
     loadConfig();
   }
 
-  // 🔥 FLUJO PRINCIPAL (orden correcto)
   Future<void> loadConfig() async {
-    await loadSavedConfig();
-    await loadPrinters();
+    final paper = await storage.read(key: kPaperKey);
+    final saved = await storage.read(key: kPrinterKey);
+
+    setState(() {
+      paperSizeController.text = paper ?? "58";
+      savedPrinterAddress = saved;
+    });
   }
 
-  // 💾 cargar configuración guardada primero
-  Future<void> loadSavedConfig() async {
-    final savedPrinter = await storage.read(key: kPrinterKey);
-    final savedPaper = await storage.read(key: kPaperKey);
+  // =========================
+  Future<void> scanPrinters() async {
+    setState(() {
+      scanning = true;
+      printers.clear();
+    });
 
-    paperSizeController.text = savedPaper ?? "58";
+    // limpiar stream anterior (IMPORTANTE)
+    await FlutterBluePlus.stopScan();
 
-    _pendingPrinterAddress = savedPrinter;
+    FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+
+    final subscription = FlutterBluePlus.scanResults.listen((results) {
+      for (var r in results) {
+        final d = r.device;
+
+        if (!printers.any((e) => e.remoteId == d.remoteId)) {
+          setState(() => printers.add(d));
+        }
+
+        if (savedPrinterAddress != null &&
+            d.remoteId.str == savedPrinterAddress) {
+          setState(() => selectedPrinter = d);
+        }
+      }
+    });
+
+    await Future.delayed(const Duration(seconds: 5));
+
+    await FlutterBluePlus.stopScan();
+    await subscription.cancel();
+
+    setState(() {
+      scanning = false;
+    });
   }
 
-  // 🔵 cargar impresoras
-  Future<void> loadPrinters() async {
+  // =========================
+  Future<void> connectPrinter(BluetoothDevice device) async {
     try {
-      List<BluetoothDevice> devices = await bluetooth.getBondedDevices();
-
-      setState(() {
-        printers = devices;
-        isLoading = false;
-      });
-
-      applySavedPrinter();
-    } catch (e) {
-      setState(() {
-        printers = [];
-        isLoading = false;
-      });
+      await device.connect(timeout: const Duration(seconds: 10));
+    } catch (_) {
+      // ya conectado o fallo silencioso
     }
   }
 
-  // 🧠 aplicar impresora guardada cuando ya existen devices
-  void applySavedPrinter() {
-    if (_pendingPrinterAddress == null) return;
+  // =========================
+  Future<BluetoothCharacteristic?> _getWritableChar(
+    BluetoothDevice device,
+  ) async {
+    final services = await device.discoverServices();
 
-    try {
-      final match = printers.firstWhere(
-        (p) => p.address == _pendingPrinterAddress,
-      );
-
-      setState(() {
-        selectedPrinter = match;
-      });
-    } catch (_) {}
+    for (var s in services) {
+      for (var c in s.characteristics) {
+        if (c.properties.write || c.properties.writeWithoutResponse) {
+          return c;
+        }
+      }
+    }
+    return null;
   }
 
-  // 🔌 conectar
-  Future<void> connectPrinter() async {
+  // =========================
+  Future<void> printBytes(List<int> bytes) async {
     if (selectedPrinter == null) return;
 
-    try {
-      await bluetooth.connect(selectedPrinter!);
+    await connectPrinter(selectedPrinter!);
 
-      setState(() {
-        isConnected = true;
-      });
+    final char = await _getWritableChar(selectedPrinter!);
 
-      SnackbarHelper.show(
-        context,
-        message: "Impresora conectada",
-        backgroundColor: AppColors.success,
-      );
-    } catch (e) {
-      SnackbarHelper.show(
-        context,
-        message: "Error conexión: $e",
-        backgroundColor: AppColors.danger,
-      );
+    if (char == null) {
+      throw Exception("La impresora no tiene canal de escritura");
     }
+
+    await char.write(bytes, withoutResponse: true);
   }
 
-  // 💾 guardar config
+  // =========================
   Future<void> saveConfig() async {
-    await storage.write(
-      key: kPrinterKey,
-      value: selectedPrinter?.address ?? '',
-    );
-
     await storage.write(key: kPaperKey, value: paperSizeController.text);
+
+    if (selectedPrinter != null) {
+      await storage.write(
+        key: kPrinterKey,
+        value: selectedPrinter!.remoteId.str,
+      );
+    }
 
     SnackbarHelper.show(
       context,
@@ -129,17 +147,44 @@ class _ConfigImpresoraPageState extends State<ConfigImpresoraPage> {
     );
   }
 
-  // 🧪 test print
-  void printTestPage() {
-    bluetooth.printNewLine();
-    bluetooth.printCustom("TICKET PRUEBA", 3, 1);
-    bluetooth.printCustom("----------------------", 1, 1);
-    bluetooth.printCustom("Impresora OK", 1, 1);
-    bluetooth.printCustom("Papel: ${paperSizeController.text}mm", 1, 1);
-    bluetooth.printNewLine();
-    bluetooth.paperCut();
+  // =========================
+  Future<void> printTest() async {
+    try {
+      final bytes = await printerService.buildTicket(
+        ventas: [
+          {
+            "code": "TEST001",
+            "date": DateTime.now().toString(),
+            "details": [
+              {
+                "short_name": "TEST",
+                "number_formatted": "01",
+                "type": "A",
+                "monto_jugada": 100,
+              },
+            ],
+          },
+        ],
+        title: "TICKET PRUEBA",
+      );
+
+      await printBytes(bytes);
+
+      SnackbarHelper.show(
+        context,
+        message: "Impresión correcta",
+        backgroundColor: AppColors.success,
+      );
+    } catch (e) {
+      SnackbarHelper.show(
+        context,
+        message: "Error impresión: $e",
+        backgroundColor: AppColors.danger,
+      );
+    }
   }
 
+  // =========================
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -147,108 +192,59 @@ class _ConfigImpresoraPageState extends State<ConfigImpresoraPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Configuración de Impresora',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
+          const Text(
+            "Configuración de Impresora",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-
           const SizedBox(height: 20),
-
-          // 🔄 loading
-          if (isLoading) const Center(child: CircularProgressIndicator()),
-
-          // ❌ no printers
-          if (!isLoading && printers.isEmpty)
-            const Text("No hay impresoras emparejadas"),
-
-          // 🖨️ dropdown
-          if (!isLoading && printers.isNotEmpty) ...[
-            DropdownButtonFormField<BluetoothDevice>(
-              value: selectedPrinter,
-              decoration: const InputDecoration(
-                labelText: "Seleccionar impresora",
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.print),
-              ),
-              items: printers.map((device) {
-                return DropdownMenuItem(
-                  value: device,
-                  child: Text(device.name ?? "Sin nombre"),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedPrinter = value;
-                  isConnected = false;
-                });
-              },
-            ),
-
-            const SizedBox(height: 10),
-
-            SizedBox(
-              width: double.infinity,
-              child: CustomButton(
-                text: 'Conectar impresora',
-                icon: Icons.link,
-                color: AppColors.primary,
-                onPressed: connectPrinter,
-              ),
-            ),
-          ],
-
+          if (selectedPrinter != null)
+            Text("Impresora: ${selectedPrinter!.platformName}"),
           const SizedBox(height: 20),
-
-          // 📏 papel
           CustomInput(
             controller: paperSizeController,
-            label: "Tamaño del papel (mm)",
-            prefixIcon: Icons.straighten,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) async {
-              await saveConfig(); // 👈 ejecuta guardado
-              FocusScope.of(context).unfocus(); // cierra teclado
-            },
+            label: "Tamaño papel (mm)",
+            prefixIcon: Icons.print,
           ),
-
           const SizedBox(height: 20),
-
-          // 💾 guardar
           SizedBox(
             width: double.infinity,
             child: CustomButton(
-              text: 'Guardar configuración',
+              text: scanning ? "Buscando..." : "Buscar impresoras",
+              icon: Icons.bluetooth_searching,
+              color: AppColors.primary,
+              onPressed: scanning ? () {} : () => scanPrinters(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...printers.map((p) {
+            return RadioListTile<BluetoothDevice>(
+              title: Text(
+                p.platformName.isEmpty ? "Sin nombre" : p.platformName,
+              ),
+              subtitle: Text(p.remoteId.str),
+              value: p,
+              groupValue: selectedPrinter,
+              onChanged: (v) => setState(() => selectedPrinter = v),
+            );
+          }),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: CustomButton(
+              text: "Guardar configuración",
               icon: Icons.save,
               color: AppColors.primary,
               onPressed: saveConfig,
             ),
           ),
-
           const SizedBox(height: 10),
-
-          // 🧪 test print
           SizedBox(
             width: double.infinity,
             child: CustomButton(
-              text: 'Imprimir prueba',
+              text: "Prueba impresión",
               icon: Icons.receipt,
-              color: isConnected ? AppColors.success : Colors.grey,
-              onPressed: () {
-                if (!isConnected) {
-                  SnackbarHelper.show(
-                    context,
-                    message: "Primero conecta la impresora",
-                    backgroundColor: AppColors.warning,
-                  );
-                  return;
-                }
-                printTestPage();
-              },
+              color: AppColors.success,
+              onPressed: printTest,
             ),
           ),
         ],

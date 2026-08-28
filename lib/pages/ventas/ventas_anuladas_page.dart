@@ -1,28 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:loterymobile/pages/reportes/reportes_page.dart';
+import 'package:loterymobile/pages/ventas/controller/ventas_anuladas_controller.dart';
 import 'package:loterymobile/pages/ventas/widgets/listado_detalle.dart';
 import 'package:loterymobile/pages/ventas/widgets/ventas_filtros.dart';
-import 'package:loterymobile/pages/ventas/controller/ventas_realizadas_controller.dart';
-import 'package:loterymobile/theme/theme.dart';
-import 'package:loterymobile/pages/reportes/reportes_page.dart';
 
-class VentasRealizadasPage extends StatefulWidget {
-  const VentasRealizadasPage({super.key});
+class VentasAnuladasPage extends StatefulWidget {
+  const VentasAnuladasPage({super.key});
 
   @override
-  State<VentasRealizadasPage> createState() => _VentasRealizadasPageState();
+  State<VentasAnuladasPage> createState() => _VentasAnuladasPageState();
 }
 
-class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
-  late final VentasRealizadasController _ctrl;
+class _VentasAnuladasPageState extends State<VentasAnuladasPage> {
+  late final VentasAnuladasController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = VentasRealizadasController();
+    _ctrl = VentasAnuladasController();
 
     final today = DateFormat('dd-MM-yyyy').format(DateTime.now());
-    _ctrl.searchVentas({
+    _ctrl.searchTickets({
       "ticket": "",
       "startDate": today,
       "endDate": today,
@@ -45,14 +44,15 @@ class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
       context,
       MaterialPageRoute(
         builder: (context) => ReportesPage(
-          ventas: _ctrl.ventas,
+          ventas: _ctrl.tickets,
           filtros: _ctrl.filtrosActuales,
+          title: "Reportes Ventas anuladas",
+          moduleName: "tickets_anulados",
         ),
       ),
     );
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -65,14 +65,14 @@ class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
             children: [
               Row(
                 children: const [
-                  Icon(Icons.point_of_sale, color: Colors.green),
+                  Icon(Icons.cancel, color: Colors.red),
                   SizedBox(width: 8),
                   Text(
-                    'Ventas Realizadas',
+                    'Ventas Anuladas',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: Colors.red,
                     ),
                   ),
                 ],
@@ -92,15 +92,15 @@ class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
           ),
           const SizedBox(height: 10),
 
-          // ✅ Fuera del AnimatedBuilder — no se reconstruye en cada notificación
+          // ✅ Fuera del AnimatedBuilder
           VentasFiltros(
-            onSearch: _ctrl.searchVentas,
-            moduleName: 'ventas_realizadas',
+            onSearch: _ctrl.searchTickets,
+            moduleName: 'tickets_anulados',
           ),
 
           const SizedBox(height: 10),
 
-          // ✅ Solo la lista necesita escuchar al controller
+          // ✅ Solo la lista escucha al controller
           Expanded(
             child: AnimatedBuilder(
               animation: _ctrl,
@@ -108,10 +108,10 @@ class _VentasRealizadasPageState extends State<VentasRealizadasPage> {
                 return _ctrl.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ListadoDetalle(
-                        ventas: _ctrl.ventas,
-                        moduleName: 'ventas_realizadas',
+                        ventas: _ctrl.tickets,
+                        moduleName: 'tickets_anulados',
                         onRefresh: () =>
-                            _ctrl.searchVentas(_ctrl.filtrosActuales),
+                            _ctrl.searchTickets(_ctrl.filtrosActuales),
                       );
               },
             ),

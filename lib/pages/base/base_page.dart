@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:loterymobile/pages/ventas/ventas_page.dart';
 import 'package:loterymobile/pages/resultados/resultados_page.dart';
 import 'package:loterymobile/pages/ventas/ventas_realizadas_page.dart';
-import 'package:loterymobile/pages/tickets/tickets_premiados_page.dart';
-import 'package:loterymobile/pages/tickets/tickets_anulados_page.dart';
+import 'package:loterymobile/pages/ventas/ventas_premiadas_page.dart';
+import 'package:loterymobile/pages/ventas/ventas_anuladas_page.dart';
 import 'package:loterymobile/pages/sorteos/sorteos_page.dart';
 import 'package:loterymobile/pages/configuracion/config_impresora_page.dart';
 import 'package:loterymobile/pages/configuracion/configuracion_page.dart';
@@ -58,9 +58,9 @@ class _BasePageState extends State<BasePage> {
       case 'ventas_realizadas':
         return const VentasRealizadasPage();
       case 'tickets_premiados':
-        return const TicketsPremiadosPage();
+        return const VentasPremiadasPage();
       case 'tickets_anulados':
-        return const TicketsAnuladosPage();
+        return const VentasAnuladasPage();
 
       case 'config_impresora':
         return const ConfigImpresoraPage();
@@ -160,10 +160,10 @@ class _BasePageState extends State<BasePage> {
               _item(Icons.list_alt, "Ventas realizadas", 'ventas_realizadas'),
               _item(
                 Icons.emoji_events,
-                "Tickets premiados",
+                "Ventas premiadas",
                 'tickets_premiados',
               ),
-              _item(Icons.cancel, "Tickets anulados", 'tickets_anulados'),
+              _item(Icons.cancel, "Ventas anuladas", 'tickets_anulados'),
 
               const Divider(color: Colors.white54),
 
